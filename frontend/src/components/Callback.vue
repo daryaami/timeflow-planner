@@ -1,43 +1,38 @@
 <template>
   <div>
+    <h1>HELLOHELLO</h1>
     <p v-if="loading">Logging in...</p>
     <p v-else-if="error">Error: {{ error }}</p>
-    <!-- <p v-else>Welcome, {{ user.user_info.name }}</p> -->
   </div>
 </template>
 
-<script>
-import axios from 'axios';
+<script setup>
+import { ref, onMounted } from 'vue';
 
-export default {
-  data() {
-    return {
-      loading: true,
-      error: null,
-      user: null,
-    };
-  },
-  async created() {
-    const queryParams = new URLSearchParams(window.location.search);
-    const code = queryParams.get('code');
-    const state = queryParams.get('state');
-    // const storedState = localStorage.getItem('google_auth_state');  // Получаем сохраненный state
+const loading = ref(true);
+const error = ref(null);
 
-    if (code && state) {
-      try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/auth/google/callback?code=${code}&state=${state}`);
-        const jwtToken = response.data.jwt;
-        const created = response.data.created;
-        document.cookie = `jwt=${jwtToken}; Path=/`;
-      } catch (err) {
-        this.error = err.response?.data || err.message;
-      } finally {
-        this.loading = false;
-      }
-    } else {
-      this.error = 'Invalid callback parameters or state mismatch';
-      this.loading = false;
+onMounted(async () => {
+  console.log('Mounted');
+  const queryParams = new URLSearchParams(window.location.search);
+  const code = queryParams.get('code');
+  const state = queryParams.get('state');
+
+  if (code && state) {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/auth/google/callback?code=${code}&state=${state}`);
+      const data = await response.json();
+      const jwtToken = data.jwt;
+      const created = data.created;
+      document.cookie = `jwt=${jwtToken}; Path=/`;
+    } catch (err) {
+      error.value = err.message;
+    } finally {
+      loading.value = false;
     }
-  },
-};
+  } else {
+    error.value = 'Invalid callback parameters or state mismatch';
+    loading.value = false;
+  }
+});
 </script>

@@ -1,0 +1,13 @@
+@mixin reset-button {
+  font-family: $main-font;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+@mixin reset-list {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
