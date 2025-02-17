@@ -1,27 +1,22 @@
 <template>
   <div>
+    <h1>HELLOHELLO</h1>
     <p v-if="loading">Logging in...</p>
     <p v-else-if="error">Error: {{ error }}</p>
-    <!-- <p v-else>Welcome, {{ user.user_info.name }}</p> -->
   </div>
 </template>
 
-<script>
-import axios from 'axios';
+<script setup>
+import { ref, onMounted } from 'vue';
 
-export default {
-  data() {
-    return {
-      loading: true,
-      error: null,
-      user: null,
-    };
-  },
-  async created() {
-    const queryParams = new URLSearchParams(window.location.search);
-    const code = queryParams.get('code');
-    const state = queryParams.get('state');
-    // const storedState = localStorage.getItem('google_auth_state');  // Получаем сохраненный state
+const loading = ref(true);
+const error = ref(null);
+
+onMounted(async () => {
+  console.log('Mounted');
+  const queryParams = new URLSearchParams(window.location.search);
+  const code = queryParams.get('code');
+  const state = queryParams.get('state');
 
     if (code && state) {
       try {
