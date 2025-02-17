@@ -1,6 +1,7 @@
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from core.exceptions import GoogleAuthError, UserNotFoundError, GoogleNetworkError, InvalidGoogleResponseError, InvalidGoogleTokenError, ExpiredRefreshTokenError, GoogleTokenExchangeError, InvalidStateError
 
 from google_auth.serializers import GoogleAccessTokensSerializer
 from rest_framework.permissions import IsAuthenticated
@@ -9,9 +10,7 @@ from .services import (
     GoogleRawLoginFlowService,
 )
 from users.services import AuthService
-from .services import get_user_token, save_google_refresh_token
-from users.selectors import get_user_by_google_id
-from django.contrib.auth import login
+from .services import get_user_token, save_google_refresh_token, refresh_google_access_token
 
 
 class AccessTokenApi(APIView):
@@ -20,20 +19,19 @@ class AccessTokenApi(APIView):
     def get(self, request, *args, **kwargs):
         user = request.user
         if not user.google_id:
-            return Response({"error": "Google ID not found"}, status=status.HTTP_400_BAD_REQUEST)
+            raise UserNotFoundError("Google ID not found")
 
         try:
             access_token = get_user_token(user.google_id)
             return Response({"access_token": access_token}, status=status.HTTP_200_OK)
         except Exception:
+            # Попытка обновления access_token через refresh_token
             refresh_result = refresh_google_access_token(user)
-
             if "reauth_required" in refresh_result:
-                return Response(
-                    {"error": "Reauthentication required", "auth_url": refresh_result["auth_url"]},
-                    status=status.HTTP_401_UNAUTHORIZED,
-                )
-
+                # Выбрасываем исключение, которое даст понять фронтенду,
+                # что нужно заново залогиниться
+                raise ExpiredRefreshTokenError(
+                    "Access token expired and refresh token invalid. Please login again.",)
             return Response({"access_token": refresh_result["access_token"]}, status=status.HTTP_200_OK)
 
 
@@ -44,12 +42,20 @@ class PublicApi(APIView):
 
 class GoogleLoginRedirectApi(PublicApi):
     def get(self, request, *args, **kwargs):
-        google_login_flow = GoogleRawLoginFlowService()
-        authorization_url, state = google_login_flow.get_authorization_url()
-        # request.session["state"] = state
-        print("authorization_url", authorization_url)
-        return Response({"auth_url": f"{authorization_url}"}, status=status.HTTP_200_OK)
+        try:
+            google_login_flow = GoogleRawLoginFlowService()
+            authorization_url, state = google_login_flow.get_authorization_url()
 
+            if not authorization_url:
+                raise GoogleAuthError("Не удалось получить URL авторизации от Google.")
+
+            return Response({"auth_url": authorization_url}, status=status.HTTP_200_OK)
+
+        except GoogleAuthError as e:
+            raise e  # Передаём дальше кастомное исключение
+
+        except Exception as e:
+            raise GoogleAuthError(f"Ошибка при запросе авторизации: {str(e)}")
 
 class GoogleLoginApi(PublicApi):
     class InputSerializer(serializers.Serializer):
