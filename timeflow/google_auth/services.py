@@ -121,6 +121,32 @@ class GoogleRawLoginFlowService:
             raise ApplicationError("Failed to obtain user info from Google.")
 
         return response.json()
+        
+    def refresh_access_token(self, *, refresh_token: str) -> GoogleAccessTokens:
+        """
+        Обновляет access_token с использованием refresh_token.
+        """
+        data = {
+            "client_id": self._credentials.client_id,
+            "client_secret": self._credentials.client_secret,
+            "refresh_token": refresh_token,
+            "grant_type": "refresh_token",
+        }
+        response = requests.post(self.GOOGLE_ACCESS_TOKEN_OBTAIN_URL, data=data)
+        if not response.ok:
+            raise ApplicationError("Failed to refresh access token from Google.")
+        tokens = response.json()
+        # Обратите внимание, что в ответе может не быть id_token
+        new_tokens = GoogleAccessTokens(
+            id_token=tokens.get("id_token", ""),
+            access_token=tokens["access_token"],
+            refresh_token=refresh_token  # refresh_token обычно не меняется
+        )
+        expires_in = tokens.get("expires_in", 3600)
+        # Обновляем access_token в кэше
+        # Здесь decoded_token["sub"] можно получить через сохранённого пользователя
+        # Поэтому оставим caller'у ответственность за передачу user_id
+        return new_tokens
 
 
 def google_raw_login_get_credentials() -> GoogleRawLoginCredentials:
@@ -161,8 +187,32 @@ def get_user_token(user_id: str):
     return token
 
 
-def save_refresh_token(user, refresh_token):
+def save_google_refresh_token(user, refresh_token):
     GoogleRefreshToken.objects.update_or_create(
         user=user, 
         defaults={"refresh_token": refresh_token}
     )
+
+def refresh_google_access_token(user):
+    """
+    Обновляет access_token для пользователя, используя сохранённый refresh_token.
+    Если refresh_token не работает, возвращает URL для повторной авторизации с prompt=consent.
+    """
+    try:
+        g_refresh_token = GoogleRefreshToken.objects.get(user=user)
+    except GoogleRefreshToken.DoesNotExist:
+        raise ApplicationError("Refresh token not found for user.")
+
+    google_login_flow = GoogleRawLoginFlowService()
+
+    try:
+        new_tokens = google_login_flow.refresh_access_token(refresh_token=g_refresh_token.refresh_token)
+    except ApplicationError:
+        # Если обновление токена не удалось, просим пользователя заново авторизоваться
+        authorization_url, _ = google_login_flow.get_authorization_url(consent=True)
+        return {"reauth_required": True, "auth_url": authorization_url}
+
+    expires_in = 3600
+    store_user_token(user_id=user.google_id, token=new_tokens.access_token, expires_in=expires_in)
+    
+    return {"access_token": new_tokens.access_token}

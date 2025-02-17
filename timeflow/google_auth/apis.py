@@ -9,24 +9,37 @@ from .services import (
     GoogleRawLoginFlowService,
 )
 from users.services import AuthService
-from .services import get_user_token, save_refresh_token
+from .services import get_user_token, save_google_refresh_token
 from users.selectors import get_user_by_google_id
 from django.contrib.auth import login
 
 
-class PublicApi(APIView):
-    authentication_classes = ()
-    permission_classes = ()
-
 class AccessTokenApi(APIView):
-    permission_classes = [IsAuthenticated]  # Доступ только для аутентифицированных пользователей
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         user = request.user
         if not user.google_id:
             return Response({"error": "Google ID not found"}, status=status.HTTP_400_BAD_REQUEST)
-        access_token = get_user_token(user.google_id)
-        return Response({"access_token": access_token}, status=status.HTTP_200_OK)
+
+        try:
+            access_token = get_user_token(user.google_id)
+            return Response({"access_token": access_token}, status=status.HTTP_200_OK)
+        except Exception:
+            refresh_result = refresh_google_access_token(user)
+
+            if "reauth_required" in refresh_result:
+                return Response(
+                    {"error": "Reauthentication required", "auth_url": refresh_result["auth_url"]},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+
+            return Response({"access_token": refresh_result["access_token"]}, status=status.HTTP_200_OK)
+
+
+class PublicApi(APIView):
+    authentication_classes = ()
+    permission_classes = ()
 
 
 class GoogleLoginRedirectApi(PublicApi):
@@ -81,7 +94,7 @@ class GoogleLoginApi(PublicApi):
         access_jwt, refresh_jwt = jwt_tokens['access_token'], jwt_tokens['refresh_token']
 
         if created:
-            save_refresh_token(user=user, refresh_token=google_tokens.refresh_token)
+            save_google_refresh_token(user=user, refresh_token=google_tokens.refresh_token)
 
         result = {
             "access_jwt": access_jwt,

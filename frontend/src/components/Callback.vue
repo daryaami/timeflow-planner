@@ -26,9 +26,11 @@ export default {
     if (code && state) {
       try {
         const response = await axios.get(`http://127.0.0.1:8000/api/auth/google/callback?code=${code}&state=${state}`);
-        const jwtToken = response.data.jwt;
+        const refreshJwtToken = response.data.refresh_jwt;
+        const accessJwtToken = response.data.access_jwt;
         const created = response.data.created;
-        document.cookie = `jwt=${jwtToken}; Path=/`;
+        document.cookie = `refresh_jwt=${refreshJwtToken}; Path=/`;
+        document.cookie = `access_jwt=${accessJwtToken}; Path=/`;
       } catch (err) {
         this.error = err.response?.data || err.message;
       } finally {
