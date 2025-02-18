@@ -4,7 +4,13 @@ import logoVue from '../components/icons/logo.vue'
 
 const loginWithGoogle = async () => {
   try {
-    const response = await fetch('http://127.0.0.1:8000/api/auth/google/', { credentials: 'include' });
+    const response = await fetch('http://127.0.0.1:8000/api/auth/google/redirect/', { credentials: 'include' });
+    // Для запроса разрешений добавить параметр /?consent=true
+
+    if (!response.ok) {
+      console.error(response)
+    }
+
     const data = await response.json();
     window.location.href = data.auth_url;
   } catch (error) {

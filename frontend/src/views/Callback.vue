@@ -1,11 +1,3 @@
-<template>
-  <div>
-    <h1>HELLOHELLO</h1>
-    <p v-if="loading">Logging in...</p>
-    <p v-else-if="error">Error: {{ error }}</p>
-  </div>
-</template>
-
 <script setup>
 import { ref, onMounted } from 'vue';
 
@@ -20,13 +12,21 @@ onMounted(async () => {
 
   if (code && state) {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/auth/google/callback?code=${code}&state=${state}`);
-      const data = await response.json();
-      const jwtToken = data.jwt;
+      const res = await fetch(`http://127.0.0.1:8000/api/auth/google/callback?code=${code}&state=${state}`);
+      if (!res.ok) {
+        throw new Error(`Server error: ${res.status}`);
+      }
+      const data = await res.json(); // преобразуем ответ в JSON
+      const refreshJwtToken = data.refresh_jwt;
+      const accessJwtToken = data.access_jwt;
       const created = data.created;
-      document.cookie = `jwt=${jwtToken}; Path=/`;
+
+      console.log('Logged in successfully:', data);
+
+      document.cookie = `refresh_jwt=${refreshJwtToken}; Path=/`;
+      document.cookie = `access_jwt=${accessJwtToken}; Path=/`;
     } catch (err) {
-      error.value = err.message;
+      error.value = err.response?.data || err.message;
     } finally {
       loading.value = false;
     }
@@ -36,3 +36,12 @@ onMounted(async () => {
   }
 });
 </script>
+
+
+<template>
+  <div>
+    <h1>You are logged in!</h1>
+    <p v-if="loading">Logging in...</p>
+    <p v-else-if="error">Error: {{ error }}</p>
+  </div>
+</template>

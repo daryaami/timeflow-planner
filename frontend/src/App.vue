@@ -8,7 +8,8 @@ const route = useRoute();
 
 <template>
   <div class="container">
-    <LoginLayout v-if="route.meta.layout == 'login'" />
+    <LoginLayout />
+    <!-- <LoginLayout v-if="route.meta.layout == 'login'" /> -->
     <!-- <DefaultLayout v-if="route.meta.layout == 'default'"/> -->
   </div>
 </template>

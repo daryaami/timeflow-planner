@@ -17,12 +17,10 @@ Including another URLconf
 from django.urls import path, include
 from django.contrib import admin
 
-from users.views import GoogleCalendarEventsApi
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/google/', include('google_auth.urls')),
     path('api/auth/jwt/', include('users.urls')),
-
-    # path('calendar/events/', GoogleCalendarEventsApi.as_view(), name='google-calendar-events'),
+    path('api/events/', include('events.urls')),
+    path('api/users/', include('users.urls'))
 ]
