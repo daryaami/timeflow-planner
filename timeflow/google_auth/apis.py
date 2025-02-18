@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from django.conf import settings
 from rest_framework.exceptions import ValidationError
 from core.exceptions import GoogleAuthError, UserNotFoundError, GoogleNetworkError, InvalidGoogleResponseError, InvalidGoogleTokenError, ExpiredRefreshTokenError, GoogleTokenExchangeError, InvalidStateError
-from datetime import datetime, timedelta
+import datetime
 
 from rest_framework.permissions import IsAuthenticated
 
@@ -30,7 +30,6 @@ class AccessTokenApi(APIView):
             access_token = get_user_token(user.google_id)
             return Response({"access_token": access_token}, status=status.HTTP_200_OK)
         except Exception:
-            # Попытка обновления access_token через refresh_token
             try:    
                 refresh_result = refresh_google_access_token(user)
                 return Response({"access_token": refresh_result["access_token"]}, status=status.HTTP_200_OK)
@@ -117,17 +116,16 @@ class GoogleLoginApi(PublicApi):
             access_jwt, refresh_jwt = jwt_tokens['access_token'], jwt_tokens['refresh_token']
 
             if created or google_tokens.refresh_token:
-                save_google_refresh_token(user=user, refresh_token=google_tokens.refresh_token)
+                save_google_refresh_token(user=user, refresh_token=google_tokens.refresh_token)    
 
             result = {
                 "access_jwt": access_jwt,
-                "refresh_jwt": refresh_jwt,
                 "created": created,
             }
 
             response = Response(result, status=status.HTTP_200_OK)
             
-            expires = datetime.utcnow() + settings.REFRESH_TOKEN_LIFETIME
+            expires = datetime.datetime.now(datetime.timezone.utc) + settings.REFRESH_TOKEN_LIFETIME
             
             # Устанавливаем refresh token в HttpOnly cookie
             response.set_cookie(

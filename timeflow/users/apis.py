@@ -9,17 +9,19 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        refresh_token = request.data.get("refresh_token")
-        if not refresh_token:
+        refresh_jwt = request.COOKIES.get('refresh_jwt')
+        if not refresh_jwt:
             return Response(
                 {"error": "Refresh token not provided."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         try:
-            token = RefreshToken(refresh_token)
+            token = RefreshToken(refresh_jwt)
             token.blacklist()
-            return Response(status=status.HTTP_205_RESET_CONTENT)
+            response =  Response(status=status.HTTP_205_RESET_CONTENT)
+            response.delete_cookie('refresh_jwt')
+            return response
         except Exception as e:
             return Response(
                 {"error": f"Log out failed: {str(e)}"},
@@ -33,7 +35,7 @@ class RefreshJWTView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        refresh_jwt = request.data.get("refresh_token")
+        refresh_jwt = request.COOKIES.get('refresh_jwt')
         if not refresh_jwt:
             return Response(
                 {"error": "No refresh token provided"},
