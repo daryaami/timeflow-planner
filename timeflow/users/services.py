@@ -16,13 +16,6 @@ class AuthService:
 
     def authenticate_user(self):
         user, created = self.get_or_create_user()
-
-        if created:
-            if self.google_tokens.refresh_token:
-                save_google_refresh_token(user, self.google_tokens.refresh_token)
-            else:
-                raise ExpiredRefreshTokenError("Refresh token not found.")
-
         return self._generate_jwt(user), user, created
     
     def get_or_create_user(self):

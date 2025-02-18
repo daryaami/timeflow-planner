@@ -26,7 +26,6 @@ class LogoutView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-
 class RefreshJWTView(APIView):
     """
     Обновляет access JWT токен, используя refresh токен.

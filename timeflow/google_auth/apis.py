@@ -68,7 +68,6 @@ class GoogleLoginRedirectApi(PublicApi):
 
 
 class GoogleLoginApi(PublicApi):
-
     class InputSerializer(serializers.Serializer):
         code = serializers.CharField(required=False)
         error = serializers.CharField(required=False)
@@ -104,23 +103,35 @@ class GoogleLoginApi(PublicApi):
         #     return Response({"error": "CSRF check failed."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Создаем GoogleRawLoginFlowService для получения токенов и информации о пользователе
-        google_login_flow = GoogleRawLoginFlowService()
-        google_tokens = google_login_flow.get_tokens(code=code)
+        try:
+            google_login_flow = GoogleRawLoginFlowService()
+            google_tokens = google_login_flow.get_tokens(code=code)
 
-        user_info = google_login_flow.get_user_info(google_tokens=google_tokens)
+            user_info = google_login_flow.get_user_info(google_tokens=google_tokens)
 
-        # Аутентифицируем пользователя
-        auth_service = AuthService(user_info, google_tokens)
-        jwt_tokens, user, created = auth_service.authenticate_user()
-        access_jwt, refresh_jwt = jwt_tokens['access_token'], jwt_tokens['refresh_token']
+            # Аутентифицируем пользователя
+            auth_service = AuthService(user_info, google_tokens)
+            jwt_tokens, user, created = auth_service.authenticate_user()
+            access_jwt, refresh_jwt = jwt_tokens['access_token'], jwt_tokens['refresh_token']
 
-        if created or google_tokens.refresh_token:
-            save_google_refresh_token(user=user, refresh_token=google_tokens.refresh_token)
+            if created or google_tokens.refresh_token:
+                save_google_refresh_token(user=user, refresh_token=google_tokens.refresh_token)
 
-        result = {
-            "access_jwt": access_jwt,
-            "refresh_jwt": refresh_jwt,
-            "created": created,
-        }
+            result = {
+                "access_jwt": access_jwt,
+                "refresh_jwt": refresh_jwt,
+                "created": created,
+            }
 
-        return Response(result, status=status.HTTP_200_OK)
+            return Response(result, status=status.HTTP_200_OK)
+        
+        except InvalidGoogleTokenError as e:
+            return Response({"error": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+        except GoogleNetworkError as e:
+            return Response({"error": str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except ExpiredRefreshTokenError as e:
+            return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except InvalidStateError as e:
+            return Response({"error": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
