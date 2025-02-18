@@ -1,6 +1,7 @@
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.exceptions import ValidationError
 from core.exceptions import GoogleAuthError, UserNotFoundError, GoogleNetworkError, InvalidGoogleResponseError, InvalidGoogleTokenError, ExpiredRefreshTokenError, GoogleTokenExchangeError, InvalidStateError
 
 from rest_framework.permissions import IsAuthenticated
@@ -12,27 +13,30 @@ from users.services import AuthService
 from .services import get_user_token, save_google_refresh_token, refresh_google_access_token
 
 
+# Удалить этот эндпоинт, он тестовый
 class AccessTokenApi(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         user = request.user
         if not user.google_id:
-            raise UserNotFoundError("Google ID not found")
-
+            return Response(
+                {"error": "Google ID not found"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         try:
             access_token = get_user_token(user.google_id)
             return Response({"access_token": access_token}, status=status.HTTP_200_OK)
         except Exception:
             # Попытка обновления access_token через refresh_token
-            refresh_result = refresh_google_access_token(user)
-            if "reauth_required" in refresh_result:
-                # Выбрасываем исключение, которое даст понять фронтенду,
-                # что нужно заново залогиниться
-                raise ExpiredRefreshTokenError(
-                    "Access token expired and refresh token invalid. Please login again.",)
-            return Response({"access_token": refresh_result["access_token"]}, status=status.HTTP_200_OK)
-
+            try:    
+                refresh_result = refresh_google_access_token(user)
+                return Response({"access_token": refresh_result["access_token"]}, status=status.HTTP_200_OK)
+            except ExpiredRefreshTokenError:
+                return Response(
+                    {"error": "Access token expired and refresh token invalid. Please login again."},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
 
 class PublicApi(APIView):
     authentication_classes = ()
@@ -40,21 +44,31 @@ class PublicApi(APIView):
 
 
 class GoogleLoginRedirectApi(PublicApi):
+    # Для вызова с prompt=consent вызываем с параметром /?consent=true
     def get(self, request, *args, **kwargs):
         try:
+            consent = request.GET.get('consent', 'false').lower() == 'true'
+            
             google_login_flow = GoogleRawLoginFlowService()
-            authorization_url, state = google_login_flow.get_authorization_url()
+            authorization_url, state = google_login_flow.get_authorization_url(consent=consent)
 
             if not authorization_url:
-                raise GoogleAuthError("Не удалось получить URL авторизации от Google.")
+                return Response(
+                    {"error": "Не удалось получить URL авторизации от Google."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             return Response({"auth_url": authorization_url}, status=status.HTTP_200_OK)
         
         except Exception as e:
-            raise GoogleAuthError(f"Ошибка при запросе авторизации: {str(e)}")
+            return Response(
+                {"error": f"Ошибка при запросе авторизации: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class GoogleLoginApi(PublicApi):
+
     class InputSerializer(serializers.Serializer):
         code = serializers.CharField(required=False)
         error = serializers.CharField(required=False)
@@ -74,7 +88,10 @@ class GoogleLoginApi(PublicApi):
             return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
 
         if code is None or state is None:
-            return Exception("Code and state are required.", status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Code and state are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         # session_state = request.session.get("state")
 
@@ -97,7 +114,7 @@ class GoogleLoginApi(PublicApi):
         jwt_tokens, user, created = auth_service.authenticate_user()
         access_jwt, refresh_jwt = jwt_tokens['access_token'], jwt_tokens['refresh_token']
 
-        if created:
+        if created or google_tokens.refresh_token:
             save_google_refresh_token(user=user, refresh_token=google_tokens.refresh_token)
 
         result = {

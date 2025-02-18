@@ -11,6 +11,8 @@ from django.core.cache import cache
 from oauthlib.common import UNICODE_ASCII_CHARACTER_SET
 from core.exceptions import ExpiredRefreshTokenError, InvalidGoogleTokenError, GoogleNetworkError, RefreshTokenError
 from rest_framework import status
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
 
 from django.core.cache import cache
 
@@ -117,10 +119,12 @@ class GoogleRawLoginFlowService:
             raise InvalidGoogleTokenError("Failed to obtain access token from Google.")
 
         tokens = response.json()
+
         google_tokens = GoogleAccessTokens(id_token=tokens.get("id_token"), 
                                            access_token=tokens.get("access_token"), 
                                            refresh_token=tokens.get("refresh_token", None), 
                                            expires_in=tokens.get("expires_in", None))
+
         store_user_token(user_id=google_tokens.decode_id_token()["sub"], token=google_tokens.access_token, expires_in=google_tokens.expires_in)
 
         return google_tokens
@@ -152,16 +156,11 @@ class GoogleRawLoginFlowService:
         if not response.ok:
             raise RefreshTokenError("Failed to refresh access token from Google.")
         tokens = response.json()
-        # Обратите внимание, что в ответе может не быть id_token
-        new_tokens = GoogleAccessTokens(id_token=tokens.get("id_token"), 
+        # в ответе может не быть id_token
+        new_tokens = GoogleAccessTokens(id_token=tokens.get("id_token", None), 
                                         access_token=tokens.get("access_token"), 
                                         refresh_token=tokens.get("refresh_token", None), 
                                         expires_in=tokens.get("expires_in", None))
-
-        # Обновляем access_token в кэше
-        # Здесь decoded_token["sub"] можно получить через сохранённого пользователя
-        # Поэтому оставим caller'у ответственность за передачу user_id
-        # store_user_token(user_id=user_id, token=new_tokens.access_token, expires_in=new_tokens.expires_in)
 
         return new_tokens
 
@@ -205,6 +204,37 @@ def get_user_token(user_id: str):
         raise InvalidGoogleTokenError("Access token expired or not found.")
     return token
 
+def get_user_credentials(user_id: str) -> Credentials:
+    """
+    Получает credentials для пользователя по user_id.
+    """
+    info = {}
+    try:
+        token = get_user_token(user_id)
+        info['token'] = token
+    except Exception:
+        print('Нет токена в кэше')
+        pass
+
+    try:
+        g_refresh_token = GoogleRefreshToken.objects.get(user__google_id=user_id)
+    except GoogleRefreshToken.DoesNotExist:
+        raise ExpiredRefreshTokenError("Refresh token not found for user.")
+
+    info['refresh_token'] = g_refresh_token.refresh_token
+    info['client_id'] = settings.GOOGLE_OAUTH2_CLIENT_ID
+    info['client_secret'] = settings.GOOGLE_OAUTH2_CLIENT_SECRET
+
+
+    creds = Credentials.from_authorized_user_info(
+        info=info
+    )
+
+    if creds.expired and creds.refresh_token:
+        creds.refresh(Request())
+
+    return creds
+
 
 def save_google_refresh_token(user, refresh_token):
     GoogleRefreshToken.objects.update_or_create(
@@ -230,7 +260,7 @@ def refresh_google_access_token(user):
     try:
         new_tokens = google_login_flow.refresh_access_token(refresh_token=g_refresh_token.refresh_token)
     except Exception:
-        raise RefreshTokenError(
+        raise ExpiredRefreshTokenError(
             "Failed to refresh access token. Please login again."
         )
 

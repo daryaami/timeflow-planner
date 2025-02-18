@@ -1,6 +1,7 @@
 from django.urls import path
-from .apis import CalendarEventsApi
+from .apis import UserCalendarsEventsApi, GoogleCalendarsListApi
 
 urlpatterns = [
-    path('events/', CalendarEventsApi.as_view(), name='calendar_events'),
+    path('all/', UserCalendarsEventsApi.as_view(), name='calendar_events'),
+    path('calendars/', GoogleCalendarsListApi.as_view(), name='google_calendars_list')
 ]

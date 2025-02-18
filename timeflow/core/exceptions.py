@@ -60,3 +60,8 @@ class GoogleNetworkError(APIException):
     status_code = status.HTTP_503_SERVICE_UNAVAILABLE
     default_detail = "Ошибка соединения с Google."
     default_code = "google_network_error"
+
+class GoogleCalendarError(APIException):
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    default_detail = "Ошибка при работе с Google Календарём."
+    default_code = "google_calendar_error"

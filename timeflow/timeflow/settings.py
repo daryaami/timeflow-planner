@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'core',
     'google_auth',
     'users',
+    'events',
 ]
 
 CORS_ALLOWED_ORIGINS = [

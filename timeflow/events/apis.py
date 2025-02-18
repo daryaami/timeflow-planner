@@ -1,44 +1,39 @@
 # events/api.py
-import requests
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from .services import GoogleCalendarService
+from core.exceptions import ExpiredRefreshTokenError, GoogleNetworkError
 
-from google_auth.services import get_user_token, refresh_google_access_token
-
-class CalendarEventsApi(APIView):
+class UserCalendarsEventsApi(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        user = request.user
-
-        if not user.google_id:
-            return Response({"error": "Google ID not found."}, status=status.HTTP_400_BAD_REQUEST)
-
+        calendar_service = GoogleCalendarService()
         try:
-            access_token = get_user_token(user.google_id)
+            events = calendar_service.get_all_events(request.user)
+            return Response(events, status=status.HTTP_200_OK)
+        except ExpiredRefreshTokenError as e:
+            return Response({"error": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+        except GoogleNetworkError as e:
+            return Response({"error": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+class GoogleCalendarsListApi(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        calendar_service = GoogleCalendarService()
+        try:
+            calendars = calendar_service.get_google_calendars(request.user)
+            return Response(calendars, status=status.HTTP_200_OK)
+        except ExpiredRefreshTokenError as e:
+            return Response({"error": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+        except GoogleNetworkError as e:
+            return Response({"error": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-        }
-        google_calendar_url = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
-        response = requests.get(google_calendar_url, headers=headers)
-
-        if response.status_code == 401:
-            try:
-                new_access_token = refresh_google_access_token(user)
-                headers["Authorization"] = f"Bearer {new_access_token}"
-                response = requests.get(google_calendar_url, headers=headers)
-            except Exception as e:
-                return Response({"error": f"Token refresh failed: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
-
-        if response.ok:
-            return Response(response.json(), status=status.HTTP_200_OK)
-        else:
-            return Response(
-                {"error": "Failed to retrieve events from Google Calendar", "details": response.text},
-                status=status.HTTP_400_BAD_REQUEST
-            )

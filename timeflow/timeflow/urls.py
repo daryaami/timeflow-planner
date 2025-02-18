@@ -22,4 +22,5 @@ urlpatterns = [
     path('api/auth/google/', include('google_auth.urls')),
     path('api/auth/jwt/', include('users.urls')),
     path('api/events/', include('events.urls')),
+    path('api/users/', include('users.urls'))
 ]
