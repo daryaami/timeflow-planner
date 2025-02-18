@@ -9,6 +9,8 @@
 </template>
 
 <style lang="scss">
+@use '@/assets/scss/colors.scss' as *;
+
 .login-layout {
   display: flex;
   width: 100%;

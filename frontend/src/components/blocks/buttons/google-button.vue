@@ -17,22 +17,29 @@ const props = defineProps({
 </template>
 
 <style lang="scss">
-  .google-button {
-    @include bold-20;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: size(50px);
-    height: size(76px);
-    width: size(391px);
-    background-color: #ABFFF0;
-    color: $darkest;
-    gap: size(8px);
+@use '@/assets/scss/mixins/mixins.scss' as *;
+@use '@/assets/scss/mixins/fonts.scss' as *;
+@use '@/assets/scss/colors.scss' as *;
+@use '@/assets/scss/mixins/resets.scss' as *;
+@use '@/assets/scss/mixins/functions.scss' as *;
 
-    &__icon {
-      display: block;
-      width: size(50px);
-      height: size(50px);
-    }
+.google-button {
+  @include bold-20;
+  @include reset-button;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: size(50px);
+  height: size(76px);
+  width: size(391px);
+  background-color: #ABFFF0;
+  color: $darkest;
+  gap: size(8px);
+
+  &__icon {
+    display: block;
+    width: size(50px);
+    height: size(50px);
   }
+}
 </style>

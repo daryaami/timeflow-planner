@@ -1,3 +1,7 @@
+@use '@/assets/scss/colors.scss' as *;
+
+$font-size-main: 20px;
+
 @function size($size) {
   $remSize: calc($size / $font-size-main);
   @return #{$remSize}rem;

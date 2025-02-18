@@ -1,5 +1,7 @@
+@use '@/assets/scss/colors.scss' as *;
+
 @mixin reset-button {
-  font-family: $main-font;
+  font-family: inherit;
   border: none;
   background: transparent;
   padding: 0;

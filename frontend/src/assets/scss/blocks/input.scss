@@ -3,7 +3,7 @@
   position: relative;
 
   &__input {
-    @include light-16;
+    // @include light-16;
     width: 100%;
     outline: none;
     border: 1px solid $dark-lines;  
@@ -21,13 +21,13 @@
     resize: none;
 
     &:not(:focus) {
-      @include hover {
-        background-color: $dark-white;
+      // @include hover {
+      //   background-color: $dark-white;
   
-        & + .input__label {
-          background: linear-gradient(to top, $dark-white 0%, $dark-white 50%, transparent 50%, transparent 100%);
-        }
-      }
+      //   & + .input__label {
+      //     background: linear-gradient(to top, $dark-white 0%, $dark-white 50%, transparent 50%, transparent 100%);
+      //   }
+      // }
     }
 
     &:focus {
@@ -41,7 +41,7 @@
   }
 
   &__label {
-    @include small-light;
+    // @include small-light;
     padding: 0 1px;
     color: $light-grey;
     display: block;
@@ -53,7 +53,7 @@
   }
 
   &__error-message {
-    @include small-light;
+    // @include small-light;
     color: $error;
     display: block;
     margin-top: size(4px);
