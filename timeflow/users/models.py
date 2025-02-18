@@ -21,7 +21,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     google_id = models.CharField(max_length=50, unique=True, blank=True, null=True)  # Google ID
     name = models.CharField(max_length=255)
-    image = models.URLField(blank=True, null=True)
+    picture = models.URLField(blank=True, null=True)
     joined_on = models.DateField(default=date.today)
     time_zone = models.CharField(max_length=50, blank=True, null=True)
     is_active = models.BooleanField(default=True)

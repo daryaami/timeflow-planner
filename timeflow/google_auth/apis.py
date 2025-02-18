@@ -3,7 +3,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from core.exceptions import GoogleAuthError, UserNotFoundError, GoogleNetworkError, InvalidGoogleResponseError, InvalidGoogleTokenError, ExpiredRefreshTokenError, GoogleTokenExchangeError, InvalidStateError
 
-from google_auth.serializers import GoogleAccessTokensSerializer
 from rest_framework.permissions import IsAuthenticated
 
 from .services import (
@@ -50,12 +49,10 @@ class GoogleLoginRedirectApi(PublicApi):
                 raise GoogleAuthError("Не удалось получить URL авторизации от Google.")
 
             return Response({"auth_url": authorization_url}, status=status.HTTP_200_OK)
-
-        except GoogleAuthError as e:
-            raise e  # Передаём дальше кастомное исключение
-
+        
         except Exception as e:
             raise GoogleAuthError(f"Ошибка при запросе авторизации: {str(e)}")
+
 
 class GoogleLoginApi(PublicApi):
     class InputSerializer(serializers.Serializer):
@@ -76,8 +73,8 @@ class GoogleLoginApi(PublicApi):
         if error is not None:
             return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
 
-        # if code is None or state is None:
-        #     return Response({"error": "Code and state are required."}, status=status.HTTP_400_BAD_REQUEST)
+        if code is None or state is None:
+            return Exception("Code and state are required.", status=status.HTTP_400_BAD_REQUEST)
 
         # session_state = request.session.get("state")
 
@@ -89,14 +86,15 @@ class GoogleLoginApi(PublicApi):
         # if state != session_state:
         #     return Response({"error": "CSRF check failed."}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Создаем GoogleRawLoginFlowService для получения токенов и информации о пользователе
         google_login_flow = GoogleRawLoginFlowService()
         google_tokens = google_login_flow.get_tokens(code=code)
-        google_tokens_data = GoogleAccessTokensSerializer(google_tokens).data
 
         user_info = google_login_flow.get_user_info(google_tokens=google_tokens)
 
-        google_auth_service = AuthService(user_info, google_tokens)
-        jwt_tokens, user, created = google_auth_service.authenticate_user()
+        # Аутентифицируем пользователя
+        auth_service = AuthService(user_info, google_tokens)
+        jwt_tokens, user, created = auth_service.authenticate_user()
         access_jwt, refresh_jwt = jwt_tokens['access_token'], jwt_tokens['refresh_token']
 
         if created:

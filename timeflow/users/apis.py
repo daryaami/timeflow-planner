@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
-from core.exceptions import ExpiredRefreshTokenError
+from core.exceptions import ReauthRequiredError
 
 
 class LogoutView(APIView):
@@ -16,7 +16,7 @@ class LogoutView(APIView):
             token.blacklist()
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response("Log out failed.", status=status.HTTP_400_BAD_REQUEST)
 
 
 class RefreshJWTView(APIView):
@@ -38,7 +38,6 @@ class RefreshJWTView(APIView):
             new_access_token = str(refresh.access_token)
             return Response({"access_jwt": new_access_token})
         except Exception:
-            raise ExpiredRefreshTokenError(
-                "Invalid or expired refresh token. Please login again.",
-                status_code=status.HTTP_401_UNAUTHORIZED,
+            raise ReauthRequiredError(
+                "Invalid or expired refresh token. Please login again."
             )

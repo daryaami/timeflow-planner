@@ -16,6 +16,15 @@ from django.core.cache import cache
 
 from google_auth.models import GoogleRefreshToken
 
+@define(kw_only=True, slots=True)
+class UserInfo:
+    sub: str
+    email: str
+    email_verified: bool
+    name: str
+    given_name: str | None = None
+    family_name: str | None = None
+    picture: str | None = None
 
 @define
 class GoogleRawLoginCredentials:
@@ -24,21 +33,20 @@ class GoogleRawLoginCredentials:
     project_id: str
 
 
-@define
+@define(kw_only=True, slots=True)
 class GoogleAccessTokens:
-    id_token: str
+    id_token: str | None = None
     access_token: str
-    refresh_token: str
+    refresh_token: str | None = None
+    expires_in: int | None = 3600
 
     def decode_id_token(self) -> Dict[str, str]:
-        id_token = self.id_token
-        decoded_token = jwt.decode(jwt=id_token, options={"verify_signature": False})
-        return decoded_token
+        return jwt.decode(jwt=self.id_token, options={"verify_signature": False})
 
 
 class GoogleRawLoginFlowService:
     API_URI = settings.GOOGLE_API_URI
-
+    
     GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/auth"
     GOOGLE_ACCESS_TOKEN_OBTAIN_URL = "https://oauth2.googleapis.com/token"
     GOOGLE_USER_INFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
@@ -87,6 +95,9 @@ class GoogleRawLoginFlowService:
         return authorization_url, state
 
     def get_tokens(self, *, code: str) -> GoogleAccessTokens:
+        '''
+        Метод для получения access_token и refresh_token и сохранения access_token в кэше
+        '''
         redirect_uri = self._get_redirect_uri()
 
         # Reference: https://developers.google.com/identity/protocols/oauth2/web-server#obtainingaccesstokens
@@ -106,10 +117,11 @@ class GoogleRawLoginFlowService:
             raise InvalidGoogleTokenError("Failed to obtain access token from Google.")
 
         tokens = response.json()
-        google_tokens = GoogleAccessTokens(id_token=tokens["id_token"], access_token=tokens["access_token"], refresh_token=tokens["refresh_token"] if "refresh_token" in tokens else None)
-
-        expires_in = tokens.get("expires_in", 3600)  
-        store_user_token(user_id=google_tokens.decode_id_token()["sub"], token=google_tokens.access_token, expires_in=expires_in)
+        google_tokens = GoogleAccessTokens(id_token=tokens.get("id_token"), 
+                                           access_token=tokens.get("access_token"), 
+                                           refresh_token=tokens.get("refresh_token", None), 
+                                           expires_in=tokens.get("expires_in", None))
+        store_user_token(user_id=google_tokens.decode_id_token()["sub"], token=google_tokens.access_token, expires_in=google_tokens.expires_in)
 
         return google_tokens
 
@@ -120,8 +132,11 @@ class GoogleRawLoginFlowService:
 
         if not response.ok:
             raise GoogleNetworkError("Failed to obtain user info from Google.")
+        
+        print(response.json())
+        user_info = UserInfo(**response.json())
 
-        return response.json()
+        return user_info
         
     def refresh_access_token(self, *, refresh_token: str) -> GoogleAccessTokens:
         """
@@ -135,22 +150,24 @@ class GoogleRawLoginFlowService:
         }
         response = requests.post(self.GOOGLE_ACCESS_TOKEN_OBTAIN_URL, data=data)
         if not response.ok:
-            raise GoogleNetworkError("Failed to refresh access token from Google.")
+            raise RefreshTokenError("Failed to refresh access token from Google.")
         tokens = response.json()
         # Обратите внимание, что в ответе может не быть id_token
-        new_tokens = GoogleAccessTokens(
-            id_token=tokens.get("id_token", ""),
-            access_token=tokens["access_token"],
-            refresh_token=refresh_token
-        )
-        expires_in = tokens.get("expires_in", 3600)
+        new_tokens = GoogleAccessTokens(id_token=tokens.get("id_token"), 
+                                        access_token=tokens.get("access_token"), 
+                                        refresh_token=tokens.get("refresh_token", None), 
+                                        expires_in=tokens.get("expires_in", None))
+
         # Обновляем access_token в кэше
         # Здесь decoded_token["sub"] можно получить через сохранённого пользователя
         # Поэтому оставим caller'у ответственность за передачу user_id
+        # store_user_token(user_id=user_id, token=new_tokens.access_token, expires_in=new_tokens.expires_in)
+
         return new_tokens
 
 
-def google_raw_login_get_credentials() -> GoogleRawLoginCredentials:
+# Можно перенести в класс?
+def google_raw_login_get_credentials() -> GoogleRawLoginCredentials:    
     client_id = settings.GOOGLE_OAUTH2_CLIENT_ID
     client_secret = settings.GOOGLE_OAUTH2_CLIENT_SECRET
     project_id = settings.GOOGLE_OAUTH2_PROJECT_ID
@@ -213,13 +230,10 @@ def refresh_google_access_token(user):
     try:
         new_tokens = google_login_flow.refresh_access_token(refresh_token=g_refresh_token.refresh_token)
     except Exception:
-        # Если обновление токена не удалось, выбрасываем ошибку с сообщением,
-        # что требуется повторная авторизация с consent
         raise RefreshTokenError(
             "Failed to refresh access token. Please login again."
         )
 
-    expires_in = 3600
-    store_user_token(user_id=user.google_id, token=new_tokens.access_token, expires_in=expires_in)
+    store_user_token(user_id=user.google_id, token=new_tokens.access_token, expires_in=new_tokens.expires_in)
     
     return {"access_token": new_tokens.access_token}
