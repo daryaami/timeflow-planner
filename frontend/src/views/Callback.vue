@@ -5,7 +5,6 @@ const loading = ref(true);
 const error = ref(null);
 
 onMounted(async () => {
-  console.log('Mounted');
   const queryParams = new URLSearchParams(window.location.search);
   const code = queryParams.get('code');
   const state = queryParams.get('state');
@@ -17,14 +16,10 @@ onMounted(async () => {
         throw new Error(`Server error: ${res.status}`);
       }
       const data = await res.json(); // преобразуем ответ в JSON
-      const refreshJwtToken = data.refresh_jwt;
       const accessJwtToken = data.access_jwt;
-      const created = data.created;
 
-      console.log('Logged in successfully:', data);
+      
 
-      document.cookie = `refresh_jwt=${refreshJwtToken}; Path=/`;
-      document.cookie = `access_jwt=${accessJwtToken}; Path=/`;
     } catch (err) {
       error.value = err.response?.data || err.message;
     } finally {

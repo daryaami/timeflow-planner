@@ -1,8 +1,10 @@
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.conf import settings
 from rest_framework.exceptions import ValidationError
 from core.exceptions import GoogleAuthError, UserNotFoundError, GoogleNetworkError, InvalidGoogleResponseError, InvalidGoogleTokenError, ExpiredRefreshTokenError, GoogleTokenExchangeError, InvalidStateError
+from datetime import datetime, timedelta
 
 from rest_framework.permissions import IsAuthenticated
 
@@ -123,7 +125,21 @@ class GoogleLoginApi(PublicApi):
                 "created": created,
             }
 
-            return Response(result, status=status.HTTP_200_OK)
+            response = Response(result, status=status.HTTP_200_OK)
+            
+            expires = datetime.utcnow() + settings.REFRESH_TOKEN_LIFETIME
+            
+            # Устанавливаем refresh token в HttpOnly cookie
+            response.set_cookie(
+                key='refresh_jwt',
+                value=refresh_jwt,
+                httponly=True,       # Доступ к куке только через HTTP(S)
+                # secure=True,         # Отправлять только по HTTPS (в режиме разработки можно отключить)
+                samesite='Strict',   # Ограничение для кросс-сайтовых запросов
+                expires=expires
+            )
+
+            return response
         
         except InvalidGoogleTokenError as e:
             return Response({"error": str(e)}, status=status.HTTP_401_UNAUTHORIZED)

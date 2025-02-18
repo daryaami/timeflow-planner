@@ -5,7 +5,7 @@ import { ref, onMounted } from 'vue'
 const accessToken = ref(null)
 
 onMounted(async () => {
-  const refresh_jwt = document.cookie.match(/refresh_jwt=([^;]+)/)[1];
+  // const refresh_jwt = document.cookie.match(/refresh_jwt=([^;]+)/)[1];
   const access_jwt = document.cookie.match(/access_jwt=([^;]+)/)[1];
   const response = await fetch('http://127.0.0.1:8000/api/auth/google/access/', {
     headers: {
