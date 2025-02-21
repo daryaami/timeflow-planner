@@ -1,3 +1,4 @@
+import calendar
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -11,33 +12,14 @@ from rest_framework.permissions import IsAuthenticated
 from .services import (
     GoogleRawLoginFlowService,
 )
+from events.services import GoogleCalendarService
 from users.services import AuthService
 from .services import get_user_token, save_google_refresh_token, refresh_google_access_token
+import logging
+from django.db import transaction
 
+logger = logging.getLogger(__name__)
 
-# Удалить этот эндпоинт, он тестовый
-class AccessTokenApi(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
-        user = request.user
-        if not user.google_id:
-            return Response(
-                {"error": "Google ID not found"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        try:
-            access_token = get_user_token(user.google_id)
-            return Response({"access_token": access_token}, status=status.HTTP_200_OK)
-        except Exception:
-            try:    
-                refresh_result = refresh_google_access_token(user)
-                return Response({"access_token": refresh_result["access_token"]}, status=status.HTTP_200_OK)
-            except ExpiredRefreshTokenError:
-                return Response(
-                    {"error": "Access token expired and refresh token invalid. Please login again."},
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
 
 class PublicApi(APIView):
     authentication_classes = ()
@@ -45,7 +27,6 @@ class PublicApi(APIView):
 
 
 class GoogleLoginRedirectApi(PublicApi):
-    # Для вызова с prompt=consent вызываем с параметром /?consent=true
     def get(self, request, *args, **kwargs):
         try:
             consent = request.GET.get('consent', 'false').lower() == 'true'
@@ -111,12 +92,21 @@ class GoogleLoginApi(PublicApi):
             user_info = google_login_flow.get_user_info(google_tokens=google_tokens)
 
             # Аутентифицируем пользователя
-            auth_service = AuthService(user_info, google_tokens)
-            jwt_tokens, user, created = auth_service.authenticate_user()
-            access_jwt, refresh_jwt = jwt_tokens['access_token'], jwt_tokens['refresh_token']
+            with transaction.atomic():
+                auth_service = AuthService(user_info, google_tokens)
+                jwt_tokens, user, created = auth_service.authenticate_user()
+                access_jwt, refresh_jwt = jwt_tokens['access_token'], jwt_tokens['refresh_token']
 
-            if created or google_tokens.refresh_token:
-                save_google_refresh_token(user=user, refresh_token=google_tokens.refresh_token)    
+                if google_tokens.refresh_token:
+                    save_google_refresh_token(user=user, refresh_token=google_tokens.refresh_token)
+
+                if created:
+                    logger.info("Создан пользователь: %s", user)
+                    calendar_service = GoogleCalendarService()
+                    calendar_service.create_user_calendars(user=user)
+
+                if created and not google_tokens.refresh_token:
+                    raise ExpiredRefreshTokenError("Google refresh token is missing. Refresh permissions.")
 
             result = {
                 "access_jwt": access_jwt,
@@ -140,12 +130,14 @@ class GoogleLoginApi(PublicApi):
             return response
         
         except InvalidGoogleTokenError as e:
-            return Response({"error": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
-        except GoogleNetworkError as e:
-            return Response({"error": str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            logger.exception("InvalidGoogleTokenError при авторизации: %s", e)
+            return Response({"error": "Неверный токен от Google."}, status=status.HTTP_401_UNAUTHORIZED)
         except ExpiredRefreshTokenError as e:
-            return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except InvalidStateError as e:
-            return Response({"error": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+            logger.exception("ExpiredRefreshTokenError при авторизации: %s", e)
+            return Response({"error": "Google refresh token is missing. Refresh permissions."}, status=status.HTTP_403_FORBIDDEN)
+        except GoogleNetworkError as e:
+            logger.exception("GoogleNetworkError при авторизации: %s", e)
+            return Response({"error": "Ошибка связи с Google API."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            logger.exception("Неожиданная ошибка при авторизации через Google: %s", e)
+            return Response({"error": "Произошла непредвиденная ошибка."}, status=status.HTTP_400_BAD_REQUEST)

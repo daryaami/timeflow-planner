@@ -2,11 +2,18 @@
 
 from django.conf import settings
 import requests
+from rest_framework import serializers
 from google_auth.services import get_user_credentials
 from core.exceptions import GoogleNetworkError
 from .models import UserCalendar
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from .serializers import UserCalendarSerializer
+import logging
+from django.db import transaction
+from core.exceptions import CalendarCreationError, CalendarSyncError
+
+logger = logging.getLogger(__name__)
 
 
 class GoogleCalendarService:
@@ -27,7 +34,7 @@ class GoogleCalendarService:
         return {
             "Authorization": f"Bearer {access_token}",
         }
-    
+
     def get_google_calendars(self, user):
         """
         Получает список календарей, доступных для пользователя.
@@ -40,18 +47,16 @@ class GoogleCalendarService:
         """
         try:
             service = self._build_google_service(user)
-            print('Сервис получен')
             calendar_list = service.calendarList().list().execute()
-            print('Список календарей получен: ', calendar_list)
             
             return [
             {
-                "id": calendar.get("id"),
+                "calendar_id": calendar.get("id"),
                 "summary": calendar.get("summary"),
                 "description": calendar.get("description", None),
-                "timeZone": calendar.get("timeZone", None),
+                "time_zone": calendar.get("timeZone", None),
                 "primary": calendar.get("primary", 'false'),
-                'backgroundColor': calendar.get("backgroundColor"),
+                'background_color': calendar.get("backgroundColor"),
                 # 'foregroundColor': calendar.get("foregroundColor"),
                 "owner": calendar.get("accessRole", False) == 'owner',
             }
@@ -59,31 +64,45 @@ class GoogleCalendarService:
             ]
 
         except HttpError as e:
-            raise GoogleNetworkError(f"Google API error: {str(e)}")
+            raise GoogleNetworkError(f"Ошибка при обращении к Google API: {str(e)}")
         except Exception as e:
-            raise Exception(f"Unexpected error: {str(e)}")
+            raise GoogleNetworkError(f"Непредвиденная ошибка при получении календарей: {str(e)}")
 
-    def get_events_from_calendar(self, calendar):
+    def create_user_calendars(self, user):
         """
-        Получает события для заданного календаря.
-        calendar: экземпляр модели UserCalendar.
+        Создает календари пользователя в базе данных.
         """
-        user = calendar.user
-        access_token = self._get_credentials(user).token
-        print('Токен получен успешно')
-        headers = self._get_headers(access_token)
-        url = self.CALENDAR_EVENTS_URL.format(calendar_id=calendar.calendar_id)
-        response = requests.get(url, headers=headers)
-        
-        if not response.ok:
-            raise GoogleNetworkError(f"Не удалось получить события для календаря {calendar.calendar_id}.")
-        
         try:
-            data = response.json()
-        except ValueError:
-            raise GoogleNetworkError(f"Не удалось распарсить ответ для календаря {calendar.calendar_id}.")
-        
-        return data
+            calendars = self.get_google_calendars(user)
+            serializer = UserCalendarSerializer(data=calendars, many=True)
+            if serializer.is_valid():
+                user_calendars = [UserCalendar(**data, user=user) for data in serializer.validated_data]
+                UserCalendar.objects.bulk_create(user_calendars)
+            else:
+                raise CalendarCreationError(f"Ошибка сериализации календарей: {serializer.errors}")
+        except CalendarSyncError as e:
+            raise CalendarSyncError(f"Ошибка синхронизации календарей для пользователя {user}: {e}")
+        except Exception as e:
+            raise CalendarCreationError(f"Ошибка при создании календарей для пользователя {user}: {str(e)}")
+
+    def get_events_from_calendar(self, calendar, credentials):
+        """
+        Получает события из календаря пользователя.
+        """
+        try:
+            access_token = credentials.token
+            headers = self._get_headers(access_token)
+            url = self.CALENDAR_EVENTS_URL.format(calendar_id=calendar.calendar_id)
+            response = requests.get(url, headers=headers)
+
+            if not response.ok:
+                raise GoogleNetworkError(f"Ошибка при получении событий: {response.status_code}")
+
+            return response.json()
+        except GoogleNetworkError as e:
+            raise GoogleNetworkError(f"Ошибка при получении событий из календаря {calendar.calendar_id}: {str(e)}")
+        except Exception as e:
+            raise CalendarSyncError(f"Неизвестная ошибка при получении событий из календаря {calendar.calendar_id}: {str(e)}")
 
     def get_all_events(self, user):
         """
@@ -93,9 +112,10 @@ class GoogleCalendarService:
         # Получаем календари, выбранные для отображения
         user_calendars = UserCalendar.objects.filter(user=user, selected=True)
         events_list = []
+        credentials = self._get_credentials(user)
         for calendar in user_calendars:
             try:
-                calendar_events = self.get_events_from_calendar(calendar)
+                calendar_events = self.get_events_from_calendar(calendar, credentials)
                 # Предполагаем, что в ответе содержится ключ "items" с событиями
                 events = calendar_events.get("items", [])
                 events_list.extend(events)

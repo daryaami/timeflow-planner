@@ -13,7 +13,7 @@ class UserCalendar(models.Model):
         max_length=255,
         help_text="Идентификатор календаря из Google."
     )
-    name = models.CharField(
+    summary = models.CharField(
         max_length=255,
         help_text="Название календаря, как отображается у пользователя."
     )
@@ -27,7 +27,7 @@ class UserCalendar(models.Model):
         default=True,
         help_text='Является ли пользователь владельцем календаря.'
     )
-    backgroundColor = models.CharField(
+    background_color = models.CharField(
         max_length=7, 
         blank=True, 
         null=True,
@@ -36,6 +36,12 @@ class UserCalendar(models.Model):
     selected = models.BooleanField(
         default=True,
         help_text="Флаг, указывающий выбран ли календарь для отображения."
+    )
+    time_zone = models.CharField(
+        max_length=50, 
+        blank=True, 
+        null=True,
+        help_text="Часовой пояс календаря."
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

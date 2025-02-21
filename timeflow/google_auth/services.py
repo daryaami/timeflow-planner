@@ -17,6 +17,9 @@ from google.auth.transport.requests import Request
 from django.core.cache import cache
 
 from google_auth.models import GoogleRefreshToken
+import logging
+
+logger = logging.getLogger(__name__)
 
 @define(kw_only=True, slots=True)
 class UserInfo:
@@ -214,6 +217,7 @@ def get_user_credentials(user_id: str) -> Credentials:
         info['token'] = token
     except Exception:
         print('Нет токена в кэше')
+        logger.info('Нет токена в кэше')
         pass
 
     try:
@@ -232,6 +236,8 @@ def get_user_credentials(user_id: str) -> Credentials:
 
     if creds.expired and creds.refresh_token:
         creds.refresh(Request())
+
+    store_user_token(user_id=user_id, token=creds.token)
 
     return creds
 

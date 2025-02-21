@@ -5,6 +5,8 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .services import GoogleCalendarService
 from core.exceptions import ExpiredRefreshTokenError, GoogleNetworkError
+from .models import UserCalendar
+from .serializers import UserCalendarSerializer
 
 class UserCalendarsEventsApi(APIView):
     permission_classes = [IsAuthenticated]
@@ -22,18 +24,22 @@ class UserCalendarsEventsApi(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
 
-class GoogleCalendarsListApi(APIView):
+class UserCalendarsListApi(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        calendar_service = GoogleCalendarService()
         try:
-            calendars = calendar_service.get_google_calendars(request.user)
-            return Response(calendars, status=status.HTTP_200_OK)
-        except ExpiredRefreshTokenError as e:
-            return Response({"error": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
-        except GoogleNetworkError as e:
-            return Response({"error": str(e)}, status=status.HTTP_502_BAD_GATEWAY)
+            user_calendars = UserCalendar.objects.filter(user=request.user)
+            serializer = UserCalendarSerializer(user_calendars, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+class UpdateUserCalendarApi(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        UserCalendar.objects.filter(user=request.user).delete()
+        calendar_service = GoogleCalendarService()
+        calendar_service.create_user_calendars(request.user)
+        return Response({"message": "Calendars updated"}, status=status.HTTP_200_OK)
