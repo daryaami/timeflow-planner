@@ -30,6 +30,7 @@ class GoogleLoginRedirectApi(PublicApi):
     def get(self, request, *args, **kwargs):
         try:
             consent = request.GET.get('consent', 'false').lower() == 'true'
+            # consent = True
             
             google_login_flow = GoogleRawLoginFlowService()
             authorization_url, state = google_login_flow.get_authorization_url(consent=consent)

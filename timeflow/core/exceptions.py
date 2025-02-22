@@ -1,7 +1,6 @@
 from rest_framework.exceptions import APIException
 from rest_framework import status
 
-
 class UserNotFoundError(APIException):
     status_code = status.HTTP_401_UNAUTHORIZED
     default_detail = "Пользователь не найден."
@@ -61,22 +60,26 @@ class GoogleNetworkError(APIException):
     default_detail = "Ошибка соединения с Google."
     default_code = "google_network_error"
 
+
 class GoogleCalendarError(APIException):
     status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
     default_detail = "Ошибка при работе с Google Календарём."
     default_code = "google_calendar_error"
+
 
 class GoogleNetworkError(APIException):
     status_code = 503  # HTTP 503 Service Unavailable, потому что ошибка связана с внешним сервисом
     default_detail = 'Произошла ошибка при обращении к Google API.'
     default_code = 'google_api_error'
 
+
 class CalendarSyncError(APIException):
     status_code = 500  # HTTP 500 Internal Server Error, ошибка на сервере
     default_detail = 'Ошибка синхронизации календаря пользователя.'
     default_code = 'calendar_sync_error'
 
+
 class CalendarCreationError(APIException):
-    status_code = 400  # HTTP 400 Bad Request, ошибка на уровне данных
+    status_code = 400
     default_detail = 'Ошибка при создании календаря пользователя.'
     default_code = 'calendar_creation_error'

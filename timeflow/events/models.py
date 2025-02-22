@@ -11,7 +11,8 @@ class UserCalendar(models.Model):
     )
     calendar_id = models.CharField(
         max_length=255,
-        help_text="Идентификатор календаря из Google."
+        help_text="Идентификатор календаря из Google.",
+        primary_key=True
     )
     summary = models.CharField(
         max_length=255,
@@ -52,4 +53,4 @@ class UserCalendar(models.Model):
         verbose_name_plural = "Календари пользователей"
 
     def __str__(self):
-        return f"{self.name} ({self.calendar_id})"
+        return f"{self.summary} ({self.calendar_id})"
