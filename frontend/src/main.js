@@ -9,4 +9,9 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 
+router.afterEach((to) => {
+  console.log('переход')
+  document.title = to.meta.metaTitle || 'TimeFlow';
+});
+
 app.mount('#app')

@@ -29,17 +29,17 @@ const props = defineProps({
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: size(50px);
-  height: size(76px);
-  width: size(391px);
+  border-radius: 50px;
+  height: 76px;
+  width: 391px;
   background-color: #ABFFF0;
   color: $darkest;
-  gap: size(8px);
+  gap: 8px;
 
   &__icon {
     display: block;
-    width: size(50px);
-    height: size(50px);
+    width: 50px;
+    height: 50px;
   }
 }
 </style>

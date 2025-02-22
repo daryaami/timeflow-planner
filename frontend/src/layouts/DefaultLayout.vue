@@ -9,7 +9,7 @@ const route = useRoute();
 
 <template>
   <div class="page-wrapper">
-    <PageHeaderVue 
+    <PageHeaderVue
       :title="route.meta.title"
     />
     <div class="page-wrapper__main">

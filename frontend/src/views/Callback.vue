@@ -1,5 +1,10 @@
 <script setup>
+import loaderVue from '../components/blocks/loaders/Loader.vue';
+
 import { ref, onMounted } from 'vue';
+import { useAccessTockenStore } from '@/store/access-tocken';
+
+const accessTockenStore = useAccessTockenStore();
 
 const loading = ref(true);
 const error = ref(null);
@@ -12,14 +17,15 @@ onMounted(async () => {
   if (code && state) {
     try {
       const res = await fetch(`http://127.0.0.1:8000/api/auth/google/callback?code=${code}&state=${state}`);
+
       if (!res.ok) {
         throw new Error(`Server error: ${res.status}`);
       }
+
       const data = await res.json(); // преобразуем ответ в JSON
-      const accessJwtToken = data.access_jwt;
+      accessTockenStore.setAccessTocken(data.access_jwt);
 
-      
-
+      window.location.href = '/planner/';
     } catch (err) {
       error.value = err.response?.data || err.message;
     } finally {
@@ -35,8 +41,6 @@ onMounted(async () => {
 
 <template>
   <div>
-    <h1>You are logged in!</h1>
-    <p v-if="loading">Logging in...</p>
-    <p v-else-if="error">Error: {{ error }}</p>
+    <loaderVue />
   </div>
 </template>

@@ -1,16 +1,15 @@
 <script setup>
 import { useRoute } from 'vue-router';
 import LoginLayout from './layouts/LoginLayout.vue';
-// import DefaultLayout from './layouts/DefaultLayout.vue';
+import DefaultLayout from './layouts/DefaultLayout.vue';
 
 const route = useRoute();
 </script>
 
 <template>
   <div class="container">
-    <LoginLayout />
-    <!-- <LoginLayout v-if="route.meta.layout == 'login'" /> -->
-    <!-- <DefaultLayout v-if="route.meta.layout == 'default'"/> -->
+    <LoginLayout v-if="route.meta.layout == 'login'" />
+    <DefaultLayout v-if="route.meta.layout == 'default'"/>
   </div>
 </template>
 
