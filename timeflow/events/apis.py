@@ -1,5 +1,5 @@
 # events/api.py
-import calendar
+from datetime import datetime
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -13,9 +13,23 @@ class UserCalendarsEventsApi(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+        start = request.query_params.get('start')
+        end = request.query_params.get('end')
+        if not start or not end:
+            return Response({"error": "Параметры start и end обязательны"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Преобразуем входящие даты в формат RFC3339 (ISO8601)
+            start_dt = datetime.strptime(start, "%Y-%m-%d")
+            end_dt = datetime.strptime(end, "%Y-%m-%d")
+            time_min = start_dt.isoformat() + "Z"
+            time_max = end_dt.isoformat() + "Z"
+        except ValueError:
+            return Response({"error": "Неверный формат дат. Ожидается YYYY-MM-DD"}, status=status.HTTP_400_BAD_REQUEST)
+        
         calendar_service = GoogleCalendarService()
         try:
-            events = calendar_service.get_all_events(request.user)
+            events = calendar_service.get_all_events(request.user, time_min, time_max)
             return Response(events, status=status.HTTP_200_OK)
         except ExpiredRefreshTokenError as e:
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)

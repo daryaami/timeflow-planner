@@ -10,6 +10,7 @@ class LogoutView(APIView):
 
     def post(self, request):
         refresh_jwt = request.COOKIES.get('refresh_jwt')
+        
         if not refresh_jwt:
             return Response(
                 {"error": "Refresh token not provided."},

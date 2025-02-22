@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     'events',
 ]
 
+CORS_ALLOW_CREDENTIALS = True
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  
     "http://127.0.0.1:5173",  
@@ -82,10 +84,7 @@ CACHES = {
     }
 }
 
-
-CORS_ALLOW_CREDENTIALS = True
-
-SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SECURE = False
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
@@ -247,8 +246,6 @@ SIMPLE_JWT = {
     'SIGNING_KEY': SECRET_KEY,
     'AUTH_HEADER_TYPES': ('JWT',),
 }
-
-
 
 BASE_BACKEND_URL = "http://localhost:8000"
 
