@@ -130,3 +130,14 @@ class GoogleCalendarService:
                     }
                 })
         return events_list
+
+    def toggle_calendar_select(self, user, calendar_id):
+        """
+        Переключает выбор календарей для пользователя.
+        """
+        try:
+            calendar = UserCalendar.objects.get(user=user, calendar_id=calendar_id)
+            calendar.selected = not calendar.selected
+            calendar.save()
+        except UserCalendar.DoesNotExist:
+            raise CalendarSyncError(f"Календарь {calendar_id} не найден")
