@@ -126,7 +126,7 @@ class GoogleCalendarService:
                     "error": str(e),
                     "calendar": {
                         "calendar_id": calendar.calendar_id,
-                        "name": calendar.name,
+                        "summary": calendar.summary,
                     }
                 })
         return events_list

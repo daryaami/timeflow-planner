@@ -3,8 +3,10 @@ import loaderVue from '../components/blocks/loaders/Loader.vue';
 
 import { ref, onMounted } from 'vue';
 import { useAccessTockenStore } from '@/store/access-tocken';
+import { useRouter } from 'vue-router';
 
 const accessTockenStore = useAccessTockenStore();
+const router = useRouter();
 
 const loading = ref(true);
 const error = ref(null);
@@ -23,9 +25,10 @@ onMounted(async () => {
       }
 
       const data = await res.json(); // преобразуем ответ в JSON
+      console.log(data);
       accessTockenStore.setAccessTocken(data.access_jwt);
 
-      window.location.href = '/planner/';
+      router.push('/planner/')
     } catch (err) {
       error.value = err.response?.data || err.message;
     } finally {

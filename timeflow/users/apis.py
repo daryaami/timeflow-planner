@@ -36,6 +36,7 @@ class RefreshJWTView(APIView):
 
     def post(self, request):
         refresh_jwt = request.COOKIES.get('refresh_jwt')
+        print(request.COOKIES)
         if not refresh_jwt:
             return Response(
                 {"error": "No refresh token provided"},

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, nextTick, computed, watch } from 'vue';
+import { ref, onMounted, nextTick, watch } from 'vue';
 
 import PlannerGrid from '@/components/blocks/planner/PlannerGrid.vue';
 import PlannerHeaderVue from '../components/blocks/planner/PlannerHeader.vue';
@@ -36,13 +36,13 @@ const fetchData = async (date) => {
   }
 }
 
-watch(currentDate, (newVal) => {
-  fetchData(newVal.date)
-})
+// watch(currentDate, (newVal) => {
+//   fetchData(newVal.date)
+// })
 
-watch(eventsStore, () => {
-  fetchData(currentDate.date)
-})
+// watch(eventsStore, () => {
+//   fetchData(currentDate.date)
+// })
 
 onMounted(() => {
   fetchData(currentDate.date);

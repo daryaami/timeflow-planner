@@ -1,6 +1,9 @@
 import { defineStore } from "pinia";
 import { ref } from 'vue';
-import { getCurrentWeekMonday, getStringDate, isSameDay } from '@/components/js/time-utils';
+import { getCurrentWeekMonday, isSameDay } from '@/components/js/time-utils';
+import { BASE_API_URL } from '@/config';
+
+import { useAccessTockenStore } from '@/store/access-tocken';
 
 export const useEventsStore = defineStore("events", () => {
   const events = ref([]);
@@ -8,16 +11,24 @@ export const useEventsStore = defineStore("events", () => {
 
   const getEvents = async (date = new Date()) => {
     const monday = getCurrentWeekMonday(date)
+    const accessTockenStore = useAccessTockenStore();
 
     if (loadedMondays.filter(item => isSameDay(monday, item)).length) {
       return events.value
     }
 
-    let response = await fetch(`${window.location.origin}/planner_api/get_events/?date=${getStringDate(monday)}`);
+    let response = await fetch(`${BASE_API_URL}/api/events/all/`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Authorization': `JWT ${accessTockenStore.getAccessTocken()}`,
+      }
+    }
+    );
 
     if (response.ok) {
       const data = await response.json();
-      events.value = [...events.value, ...data.events].reduce((acc, current) => {
+      events.value = [...events.value, ...data].reduce((acc, current) => {
         const x = acc.find(item => item.id === current.id);
         if (!x) {
           acc.push(current);
@@ -27,6 +38,8 @@ export const useEventsStore = defineStore("events", () => {
 
       loadedMondays.push(monday);
       return data.events;
+    } else if (response.status === 401) {
+      accessTockenStore.refreshAccessTocken()
     } else {
       throw new Error('Failed to fetch events');
     }
