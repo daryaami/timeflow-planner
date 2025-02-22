@@ -50,30 +50,30 @@ const loginWithGoogle = async () => {
 
   &__logo {
     display: block;
-    width: size(70px);
-    height: size(70px);
-    margin-bottom: size(20px);
+    width: 70px;
+    height: 70px;
+    margin-bottom: 20px;
   }
 
   &__title {
     font-weight: 600;
-    font-size: size(50px);
+    font-size: 50px;
     line-height: 100%;
     text-align: center;
     color: $white;
     margin-top: 0;
-    margin-bottom: size(88px);
+    margin-bottom: 88px;
   }
 
   &__button {
-    margin-bottom: size(44px);
+    margin-bottom: 44px;
   }
 
   &__text {
     @include bold-20;
     color: $white;
     margin-top: 0;
-    margin-bottom: size(163px);
+    margin-bottom: 163px;
 
     & a {
       color: #4BB6E4;

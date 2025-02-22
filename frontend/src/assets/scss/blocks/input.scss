@@ -7,15 +7,15 @@
     width: 100%;
     outline: none;
     border: 1px solid $dark-lines;  
-    border-radius: size(5px);
+    border-radius: 5px;
     display: flex;
     align-items: center;
     color: $basic-dark;
     width: 100%;
-    padding-left: size(14px);
-    padding-right: size(16px); 
-    padding-top: size(12px);
-    padding-bottom: size(12px);
+    padding-left: 14px;
+    padding-right: 16px; 
+    padding-top: 12px;
+    padding-bottom: 12px;
     box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.2);
     background-color: #ffffff;
     resize: none;
@@ -46,7 +46,7 @@
     color: $light-grey;
     display: block;
     position: absolute;
-    left: size(16px);
+    left: 16px;
     top: 0;
     transform: translateY(-50%);
     background: linear-gradient(to top, #ffffff 0%, #ffffff 50%, transparent 50%, transparent 100%);
@@ -56,7 +56,7 @@
     // @include small-light;
     color: $error;
     display: block;
-    margin-top: size(4px);
-    margin-left: size(5px);
+    margin-top: 4px;
+    margin-left: 5px;
   }
 }
