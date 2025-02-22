@@ -65,8 +65,6 @@ class GoogleCalendarService:
 
         except HttpError as e:
             raise GoogleNetworkError(f"Ошибка при обращении к Google API: {str(e)}")
-        except Exception as e:
-            raise GoogleNetworkError(f"Непредвиденная ошибка при получении календарей: {str(e)}")
 
     def create_user_calendars(self, user):
         """
@@ -82,18 +80,22 @@ class GoogleCalendarService:
                 raise CalendarCreationError(f"Ошибка сериализации календарей: {serializer.errors}")
         except CalendarSyncError as e:
             raise CalendarSyncError(f"Ошибка синхронизации календарей для пользователя {user}: {e}")
-        except Exception as e:
-            raise CalendarCreationError(f"Ошибка при создании календарей для пользователя {user}: {str(e)}")
 
-    def get_events_from_calendar(self, calendar, credentials):
+    def get_events_from_calendar(self, calendar, credentials, time_min, time_max):
         """
-        Получает события из календаря пользователя.
+        Получает события из календаря пользователя в заданном диапазоне времени.
         """
         try:
             access_token = credentials.token
             headers = self._get_headers(access_token)
             url = self.CALENDAR_EVENTS_URL.format(calendar_id=calendar.calendar_id)
-            response = requests.get(url, headers=headers)
+            params = {
+                "timeMin": time_min,
+                "timeMax": time_max,
+                "singleEvents": True,
+                "orderBy": "startTime"
+            }
+            response = requests.get(url, headers=headers, params=params)
 
             if not response.ok:
                 raise GoogleNetworkError(f"Ошибка при получении событий: {response.status_code}")
@@ -104,7 +106,7 @@ class GoogleCalendarService:
         except Exception as e:
             raise CalendarSyncError(f"Неизвестная ошибка при получении событий из календаря {calendar.calendar_id}: {str(e)}")
 
-    def get_all_events(self, user):
+    def get_all_events(self, user, time_min, time_max):
         """
         Получает события для всех выбранных календарей пользователя.
         Возвращает список событий, где каждое событие дополнено информацией о календаре.
@@ -115,10 +117,12 @@ class GoogleCalendarService:
         credentials = self._get_credentials(user)
         for calendar in user_calendars:
             try:
-                calendar_events = self.get_events_from_calendar(calendar, credentials)
+                calendar_events = self.get_events_from_calendar(calendar, credentials, time_min, time_max)
                 # Предполагаем, что в ответе содержится ключ "items" с событиями
                 events = calendar_events.get("items", [])
-                events_list.extend(events)
+                for event in events:
+                    event['calendar'] = calendar.calendar_id
+                    events_list.append(event)
             except Exception as e:
                 # Можно логировать ошибки получения событий для конкретного календаря
                 # Или вернуть специальный результат для этого календаря
