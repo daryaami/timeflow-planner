@@ -24,7 +24,6 @@ const route = useRoute();
 
 html {
   height: 100%;
-  font-size: size-desktop($font-size-main);
 }
 
 #app {

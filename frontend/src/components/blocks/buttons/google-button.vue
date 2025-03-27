@@ -18,13 +18,10 @@ const props = defineProps({
 
 <style lang="scss">
 @use '@/assets/scss/mixins/mixins.scss' as *;
-@use '@/assets/scss/mixins/fonts.scss' as *;
-@use '@/assets/scss/colors.scss' as *;
 @use '@/assets/scss/mixins/resets.scss' as *;
-@use '@/assets/scss/mixins/functions.scss' as *;
 
 .google-button {
-  @include bold-20;
+  font: var(--bold-20);
   @include reset-button;
   display: flex;
   align-items: center;
@@ -32,8 +29,8 @@ const props = defineProps({
   border-radius: 50px;
   height: 76px;
   width: 391px;
-  background-color: #ABFFF0;
-  color: $darkest;
+  background-color: var(--bg-auth-google);
+  color: var(--text-primary);
   gap: 8px;
 
   &__icon {

@@ -1,5 +1,5 @@
 <script setup>
-import googleButtonVue from '../components/blocks/buttons/google-button.vue'
+import googleButton from '../components/blocks/buttons/google-button.vue'
 import logoVue from '../components/icons/logo.vue'
 
 const loginWithGoogle = async () => {
@@ -26,22 +26,17 @@ const loginWithGoogle = async () => {
       />
       <h1 class="login-page__title">Log in to TimeFlow</h1>
 
-      <googleButtonVue class="login-page__button"
+      <googleButton class="login-page__button"
         @click="loginWithGoogle"
         text="Continue with Google"
       />
 
-      <p class="login-page__text">Don't have an account? <RouterLink to="/signup/">Sign Up</RouterLink></p>
-
-      <p class="login-page__privacy-text">By using TimeFlow, you agree to our <a href="javascript:void();">Terms of Service</a> and <a href="javascript:void();">Privacy Policy</a>.</p>
+      <p class="login-page__privacy-text">By using TimeFlow, you agree to our Terms of Service and  Privacy Policy.</p>
     </section>
 </template>
 
 <style lang="scss">
 @use '@/assets/scss/mixins/mixins.scss' as *;
-@use '@/assets/scss/mixins/fonts.scss' as *;
-@use '@/assets/scss/colors.scss' as *;
-@use '@/assets/scss/mixins/functions.scss' as *;
 
 .login-page {
   display: flex;
@@ -52,42 +47,27 @@ const loginWithGoogle = async () => {
     display: block;
     width: 70px;
     height: 70px;
-    margin-bottom: 20px;
+    margin-bottom: 22px;
   }
 
   &__title {
-    font-weight: 600;
-    font-size: 50px;
     line-height: 100%;
-    text-align: center;
-    color: $white;
     margin-top: 0;
     margin-bottom: 88px;
+    font-weight: 600;
+    font-size: 50px;
+    text-align: center;
+    color: var(--text-secondary);
   }
 
   &__button {
-    margin-bottom: 44px;
-  }
-
-  &__text {
-    @include bold-20;
-    color: $white;
-    margin-top: 0;
-    margin-bottom: 163px;
-
-    & a {
-      color: #4BB6E4;
-    }
+    margin-bottom: 143px;
   }
 
   &__privacy-text {
-    @include light-20;
-    color: $dark-lines;
+    font: var(--light-20);
     margin: 0;
-
-    & a {
-      text-decoration: underline;
-    }
+    color: var(--text-secondary-muted);
   }
 }
 </style>
