@@ -1,6 +1,6 @@
 <script setup>
-import MainAsideVue from "../components/blocks/main-aside/MainAside.vue";
-import PageHeaderVue from "../components/blocks/PageHeader.vue";
+import MainAside from "../components/blocks/main-aside/MainAside.vue";
+import PageHeader from "../components/blocks/PageHeader.vue";
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
@@ -9,11 +9,11 @@ const route = useRoute();
 
 <template>
   <div class="page-wrapper">
-    <PageHeaderVue
-      :title="route.meta.title"
-    />
+    <MainAside />
     <div class="page-wrapper__main">
-      <MainAsideVue />
+      <PageHeader
+        :title="route.meta.title"
+      />
       <RouterView  />
     </div>
   </div>
@@ -24,10 +24,11 @@ const route = useRoute();
   width: 100%;
   height: 100%;
   display: grid;
-  grid-template-rows: min-content 1fr;
+  grid-template-columns: min-content 1fr;
 
   &__main {
     display: flex;
+    flex-direction: column;
     width: 100%;
     flex-grow: 1;
     overflow: auto;

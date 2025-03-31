@@ -14,7 +14,7 @@ const props = defineProps({
 <template>
   <div class="page-header">
     <div class="page-header__title-wrapper">
-      <img :src="logoIcon" alt="TimeFlow" width="40" height="40">
+
 
       <h1 class="page-header__title">TimeFlow</h1>
     </div>

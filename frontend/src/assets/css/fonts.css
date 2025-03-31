@@ -2,7 +2,11 @@
   --main-font: "Geologica", sans-serif;
 
   --light-20: 200 20px / 1 var(--main-font);
+  --light-16: 200 16px / 1 var(--main-font);
+
+  --bold-title-24: 400 24px / 1 var(--main-font);
 
   --bold-20: 400 20px / 1 var(--main-font);
   --bold-16: 400 16px / 1 var(--main-font);
+  --bold-12: 400 12px / 14px var(--main-font);
 }

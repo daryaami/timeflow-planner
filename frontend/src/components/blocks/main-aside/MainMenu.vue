@@ -1,25 +1,23 @@
 <script setup>
+import calendarIcon from "@/assets/img/calendar.svg"
+import checklistIcon from "@/assets/img/checklist.svg"
+import goalIcon from "@/assets/img/goal.svg"
+
 const menuItems = [
   {
-    title: 'Calendar',
-    icon: '#calendar-icon',
-    isCurrent: true,
+    text: 'My day',
+    icon: goalIcon,
+    href: '/may-day/',
   },
   {
-    title: 'Tasks',
-    icon: '#tasks-icon',
+    text: 'All my tasks',
+    icon: checklistIcon,
+    href: '/tasks/',
   },
   {
-    title: 'Habits',
-    icon: '#habits-icon',
-  },
-  {
-    title: 'Statistics',
-    icon: '#stats-icon',
-  },
-  {
-    title: 'Settings',
-    icon: '#settings-icon',
+    text: 'Calendar',
+    icon: calendarIcon,
+    href: '/planner/',
   },
 ]
 </script>
@@ -29,16 +27,12 @@ const menuItems = [
     <ul class="main-menu__list">
       <li
         v-for="item in menuItems"
-        :key="item.title"
+        :key="item.text"
       >
-        <a href="#" class="main-menu__link"
-          :class="[{'current': item.isCurrent}]"
-        >
-          <svg width="20" height="20">
-            <use :xlink:href="item.icon" />
-          </svg>
-          <span>{{ item.title }}</span>
-        </a>
+        <RouterLink :to="item.href" class="main-menu__link">
+          <component :is="item.icon" />
+          <span v-text="item.text"></span>
+        </RouterLink>
       </li>
     </ul>
 
@@ -48,40 +42,40 @@ const menuItems = [
 
 
 <style lang="scss">
-@use '@/assets/scss/colors.scss' as *;
 @use '@/assets/scss/mixins/resets.scss' as *;
-@use '@/assets/scss/mixins/fonts.scss' as *;
+@use '@/assets/scss/mixins/mixins' as *;
 
 .main-menu {
-  padding: 0 26px;
-
   &__list {
     padding: 0;
     margin: 0;
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 8px;
   }
 
   &__link {
+    font: var(--light-16);
     display: flex;
     align-items: center;
-    gap: 13px;
-    padding: 19px 23px;
-    background-repeat: no-repeat;
-    background-position: 23px center;
-    border-radius: 15px;
-    background-size: 20px 20px;
-    @include bold-title-24;
+    gap: 14px;
+    padding: 13px 30px;
 
-
-    &.current {
-      background-color: $dark-lines;
+    &:not(.router-link-active) {
+      @include hover {
+        background: var(--bg-primary-hover);
+      }
     }
 
-    &:not(.current):hover {
-      background-color: $dark-lines;
+    &.router-link-active {
+      font: var(--bold-16);
+      color: var(--text-accent);
+
+      & * {
+        fill: var(--text-accent)!important;
+        //stroke: var(--text-accent)!important;
+        color: var(--text-accent)!important;
+      }
     }
   }
 

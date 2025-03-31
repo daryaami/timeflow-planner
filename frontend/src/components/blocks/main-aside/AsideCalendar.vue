@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue';
 import { getCurrentWeekMonday, getTomorrow } from '@/components/js/time-utils';
 import { useCurrentDateStore } from '@/store/currentDate';
+import IconButton from "@/components/blocks/buttons/icon-button.vue";
 
 const weekDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
@@ -55,27 +56,23 @@ watch(currentDate, (newValue) => {
       <div class="aside-calendar__month-wrapper">
         <span class="aside-calendar__month">{{ currentMonth }}</span>
         <div class="aside-calendar__buttons-wrapper">
-          <button class="aside-calendar__button"
+          <IconButton
             @click="prevMonthHandler"
-          >
-            <svg width="16" height="16">
-              <use xlink:href="#arrow-prev"/>
-            </svg>
-          </button>
+            icon="#chevron-left"
+            size="xs"
+          ></IconButton>
 
-          <button class="aside-calendar__button"
+          <IconButton
             @click="nextMonthHandler"
-          >
-            <svg width="16" height="16">
-              <use xlink:href="#arrow-next"/>
-            </svg>
-          </button>
+            icon="#chevron-right"
+            size="xs"
+          ></IconButton>
         </div>
       </div>
 
       <div class="aside-calendar__header aside-calendar__grid">
-        <span class="aside-calendar__weekday aside-calendar__day"
-          v-for="weekDay, i in weekDays"
+        <span class="aside-calendar__weekday"
+          v-for="(weekDay, i) in weekDays"
           :key="i"
         >
           {{ weekDay }}
@@ -86,7 +83,7 @@ watch(currentDate, (newValue) => {
         <button class="aside-calendar__day aside-calendar__date"
           v-for="day, i in days"
           :key="i"
-          :class="{'aside-calendar__date--uncurrent': day.getMonth() != currentCalendarDate.getMonth() }"
+          :class="{'aside-calendar__date--uncurrent': day.getMonth() !== currentCalendarDate.getMonth() }"
           @click="currentDate.setDate(day)"
         >
             {{ day.getDate() }}
@@ -97,27 +94,25 @@ watch(currentDate, (newValue) => {
 </template>
 
 <style lang="scss">
-@use '@/assets/scss/mixins/fonts.scss' as *;
-@use '@/assets/scss/colors.scss' as *;
 @use '@/assets/scss/mixins/resets.scss' as *;
+@use '@/assets/scss/mixins/mixins' as *;
 
 .aside-calendar {
-  padding-left: 46px;
-  margin-bottom: 70px;
+  margin: 0 30px 45px 30px;
 
   &__wrapper {
     width: fit-content;
   }
 
   &__month-wrapper {
-    margin-bottom: 32px;
+    margin-bottom: 42px;
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
 
   &__month {
-    @include bold-18;
+    font: var(--bold-16);
   }
 
   &__grid {
@@ -129,11 +124,15 @@ watch(currentDate, (newValue) => {
 
   &__header {
     width: fit-content;
+    margin-bottom: 15px;
   }
 
   &__weekday {
-    @include bold-18;
-    color: $light-grey;
+    font: var(--bold-12);
+    color: var(--text-primary-disabled);
+    width: 22px;
+    display: block;
+    text-align: center;
   }
 
   &__calendar {
@@ -141,44 +140,35 @@ watch(currentDate, (newValue) => {
   }
 
   &__day {
+    font: var(--bold-12);
+    color: var(--text-primary-muted);
     display: flex;
     align-items: center;
     justify-content: center;
-    @include bold-18;
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+
+    @include hover {
+      background: var(--bg-primary-hover);
+    }
   }
 
   &__date {
     @include reset-button;
-    background-color: $white;
+    //background-color: $white;
     border-radius: 50%;
 
     &--uncurrent {
       background: transparent;
-      color: $dark-grey;
+      //color: $dark-grey;
     }
   }
 
   &__buttons-wrapper {
     display: flex;
     align-items: center;
-    gap: 18px;
-  }
-
-  &__button {
-    @include reset-button;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-
-    & svg {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
+    gap: 12px;
   }
 }
 </style>

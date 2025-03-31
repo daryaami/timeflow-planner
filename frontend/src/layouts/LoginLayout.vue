@@ -9,13 +9,11 @@
 </template>
 
 <style lang="scss">
-@use '@/assets/scss/colors.scss' as *;
-
 .login-layout {
   display: flex;
   width: 100%;
   height: 100%;
-  background-color: $violet;
+  background-color: var(--bg-tertiary);
   align-items: center;
   justify-content: center;
 }

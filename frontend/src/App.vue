@@ -8,8 +8,8 @@ const route = useRoute();
 
 <template>
   <div class="container">
-    <LoginLayout v-if="route.meta.layout == 'login'" />
-    <DefaultLayout v-if="route.meta.layout == 'default'"/>
+    <LoginLayout v-if="route.meta.layout === 'login'" />
+    <DefaultLayout v-if="route.meta.layout === 'default'"/>
   </div>
 </template>
 
@@ -37,7 +37,7 @@ body {
   height: 100%;
   width: 100%;
   font-weight: 300;
-  font-family: $main-font;
+  font-family: var(--main-font), sans-serif;
   background-color: $white;
 }
 

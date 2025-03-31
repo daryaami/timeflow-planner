@@ -1,24 +1,37 @@
 <script setup>
-import MainMenuVue from "./MainMenu.vue";
+import MainMenu from "./MainMenu.vue";
 import AsideCalendar from "./AsideCalendar.vue";
+import logoIconURL from "@/assets/img/logo.svg?url";
 </script>
 
 <template>
   <div class="main-aside">
+    <div class="main-aside__title-wrapper">
+      <img :src="logoIconURL" alt="TimeFlow" width="34" height="34">
+      <h1 class="main-aside__title">TimeFlow</h1>
+    </div>
     <AsideCalendar />
-    <MainMenuVue />
+    <MainMenu />
   </div>
 </template>
 
 
 <style lang="scss">
-@use '@/assets/scss/colors.scss' as *;
-
 .main-aside {
-  width: 404px;
   height: 100%;
-  background-color: $dark-white;
+  background-color: var(--bg-secondary);
   display: block;
-  padding: 20px 0;
+
+  &__title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 17px 30px 44px 30px;
+  }
+
+  &__title {
+    font: var(--bold-title-24);
+    margin: 0;
+  }
 }
 </style>

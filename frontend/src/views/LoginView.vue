@@ -1,6 +1,6 @@
 <script setup>
 import googleButton from '../components/blocks/buttons/google-button.vue'
-import logoVue from '../components/icons/logo.vue'
+import TimeflowLogo from '../components/icons/timeflow-logo.vue'
 
 const loginWithGoogle = async () => {
   try {
@@ -21,7 +21,7 @@ const loginWithGoogle = async () => {
 
 <template>
     <section class="login-page">
-      <logoVue
+      <TimeflowLogo
         class="login-page__logo"
       />
       <h1 class="login-page__title">Log in to TimeFlow</h1>
@@ -31,7 +31,7 @@ const loginWithGoogle = async () => {
         text="Continue with Google"
       />
 
-      <p class="login-page__privacy-text">By using TimeFlow, you agree to our Terms of Service and  Privacy Policy.</p>
+      <p class="login-page__privacy-text">By using TimeFlow, you agree to our Terms of Service and Privacy Policy.</p>
     </section>
 </template>
 
