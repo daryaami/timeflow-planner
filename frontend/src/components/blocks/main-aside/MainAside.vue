@@ -30,7 +30,7 @@ import logoIconURL from "@/assets/img/logo.svg?url";
   }
 
   &__title {
-    font: var(--bold-title-24);
+    font: var(--bold-24);
     margin: 0;
   }
 }

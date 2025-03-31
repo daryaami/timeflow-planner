@@ -61,10 +61,8 @@ const menuItems = [
     gap: 14px;
     padding: 13px 30px;
 
-    &:not(.router-link-active) {
-      @include hover {
-        background: var(--bg-primary-hover);
-      }
+    @include hover {
+      background: var(--bg-primary-hover);
     }
 
     &.router-link-active {
@@ -73,7 +71,6 @@ const menuItems = [
 
       & * {
         fill: var(--text-accent)!important;
-        //stroke: var(--text-accent)!important;
         color: var(--text-accent)!important;
       }
     }

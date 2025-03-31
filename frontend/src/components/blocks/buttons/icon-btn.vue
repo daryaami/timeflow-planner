@@ -1,5 +1,5 @@
 <script setup>
-const props = defineProps({
+defineProps({
   icon: String,
   size: {
     type: String,
@@ -50,8 +50,8 @@ const props = defineProps({
   }
 
   &--s {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
 
   &--xs {

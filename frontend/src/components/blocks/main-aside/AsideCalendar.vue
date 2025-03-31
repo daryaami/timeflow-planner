@@ -2,14 +2,13 @@
 import { ref, computed, watch } from 'vue';
 import { getCurrentWeekMonday, getTomorrow } from '@/components/js/time-utils';
 import { useCurrentDateStore } from '@/store/currentDate';
-import IconButton from "@/components/blocks/buttons/icon-button.vue";
+import IconBtn from "@/components/blocks/buttons/icon-btn.vue";
 
 const weekDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 const currentDate = useCurrentDateStore()
 
 const currentCalendarDate = ref(new Date(currentDate.date));
-
 
 const days = computed(() => {
   const daysArr = []
@@ -56,17 +55,17 @@ watch(currentDate, (newValue) => {
       <div class="aside-calendar__month-wrapper">
         <span class="aside-calendar__month">{{ currentMonth }}</span>
         <div class="aside-calendar__buttons-wrapper">
-          <IconButton
+          <IconBtn
             @click="prevMonthHandler"
             icon="#chevron-left"
             size="xs"
-          ></IconButton>
+          ></IconBtn>
 
-          <IconButton
+          <IconBtn
             @click="nextMonthHandler"
             icon="#chevron-right"
             size="xs"
-          ></IconButton>
+          ></IconBtn>
         </div>
       </div>
 

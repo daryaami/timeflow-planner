@@ -1,19 +1,11 @@
 <script setup>
 import MainAside from "../components/blocks/main-aside/MainAside.vue";
-import PageHeader from "../components/blocks/PageHeader.vue";
-import { useRoute } from 'vue-router';
-
-const route = useRoute();
-
 </script>
 
 <template>
   <div class="page-wrapper">
     <MainAside />
     <div class="page-wrapper__main">
-      <PageHeader
-        :title="route.meta.title"
-      />
       <RouterView  />
     </div>
   </div>

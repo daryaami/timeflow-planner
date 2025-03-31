@@ -80,6 +80,7 @@ const cardClickHandler = (event) => {
 
     </div>
     <div class="planner__right-sidebar"
+         v-if="false"
       :class="{
         'hidden': !isSidebarOpened,
       }"

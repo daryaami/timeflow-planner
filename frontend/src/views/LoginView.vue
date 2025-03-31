@@ -1,5 +1,5 @@
 <script setup>
-import googleButton from '../components/blocks/buttons/google-button.vue'
+import GoogleBtn from '../components/blocks/buttons/google-btn.vue'
 import TimeflowLogo from '../components/icons/timeflow-logo.vue'
 
 const loginWithGoogle = async () => {
@@ -26,7 +26,7 @@ const loginWithGoogle = async () => {
       />
       <h1 class="login-page__title">Log in to TimeFlow</h1>
 
-      <googleButton class="login-page__button"
+      <GoogleBtn class="login-page__button"
         @click="loginWithGoogle"
         text="Continue with Google"
       />
