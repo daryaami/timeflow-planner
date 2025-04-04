@@ -12,7 +12,5 @@ class UserSerializer(serializers.ModelSerializer):
             'picture',
             'joined_on',
             'time_zone',
-            'is_active',
-            'is_staff',
         ]
-        read_only_fields = ['id', 'joined_on', 'is_staff', 'is_active']
+        read_only_fields = ['id', 'joined_on']
