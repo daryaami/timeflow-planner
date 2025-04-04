@@ -1,10 +1,10 @@
 <script setup>
 import { onMounted, ref, watch, computed } from 'vue';
-import { useUserDataStore } from '@/store/userData';
+import { useProfileStore } from '@/store/profile.js';
 
 import TaskItemVue from './TaskItem.vue';
 
-const userDataStore = useUserDataStore()
+const userDataStore = useProfileStore()
 
 const underlineRight = ref();
 const underlineLeft = ref();

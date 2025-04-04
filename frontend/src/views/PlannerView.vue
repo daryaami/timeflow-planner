@@ -6,7 +6,7 @@ import PlannerHeaderVue from '../components/blocks/planner/PlannerHeader.vue';
 import LoaderVue from '../components/blocks/loaders/Loader.vue';
 import EventInfoSidebar from '@/components/blocks/planner/EventInfoSidebar.vue';
 
-import { useEventsStore } from '@/store/events';
+import { useEventsStore } from '@/store/events-old.js';
 
 import RightSidebarVue from '@/components/blocks/planner/RightSidebar.vue';
 import { useCurrentDateStore } from '@/store/currentDate';
