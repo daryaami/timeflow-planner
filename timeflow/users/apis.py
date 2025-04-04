@@ -62,4 +62,4 @@ class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return Response(request.user.serialize(), status=status.HTTP_200_OK)
+        return Response(request.user, status=status.HTTP_200_OK)
