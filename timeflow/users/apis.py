@@ -56,3 +56,10 @@ class RefreshJWTView(APIView):
                 {"error": "Invalid or expired refresh token. Please login again."},
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+class ProfileView(APIView):
+    '''Получает информацию о профиле юзера'''
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response(request.user.serialize(), status=status.HTTP_200_OK)
