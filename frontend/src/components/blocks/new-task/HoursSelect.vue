@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from "vue";
 import { useDropdown } from "@/components/composables/dropdown";
-import { useUserDataStore } from "@/store/userData";
+import { useUserDataStore } from "@/store/profile.js";
 
 const { isDropdownOpen, dropdownClickHandler, closeDropdown } = useDropdown();
 const userDataStore = useUserDataStore()

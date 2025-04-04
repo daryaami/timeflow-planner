@@ -1,5 +1,21 @@
 <script setup>
 import ProfilePlaceholderIcon from "@/assets/img/profile-placeholder.svg?url";
+import { useProfileStore } from "@/store/profile.js";
+import { onMounted } from "vue";
+
+const profileStore = useProfileStore();
+
+const fetchData = async () => {
+  try {
+    await profileStore.fetchProfileData();
+  } catch (error) {
+    console.error('ошибка', error);
+  }
+}
+
+onMounted(() => {
+  fetchData();
+})
 </script>
 
 <template>
