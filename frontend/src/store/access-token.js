@@ -2,18 +2,28 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { BASE_API_URL } from '@/config';
 
-export const useAccessTokenStore = defineStore('access-tocken', () => {
-  const accessTocken = ref(null)
+export const useAccessTokenStore = defineStore('access-token', () => {
+  const accessToken = ref(null)
 
-  const setAccessTocken = (newAccessTocken) => {
-    accessTocken.value = newAccessTocken
+  const setAccessToken = (newAccessToken) => {
+    accessToken.value = newAccessToken
+    localStorage.setItem('accessToken', newAccessToken)
   }
 
-  const getAccessTocken = () => {
-    return accessTocken.value
+  const getAccessToken = () => {
+    if (!accessToken.value) {
+      const token = localStorage.getItem('accessToken')
+
+      if (!token) {
+        alert('Токен не найден')
+      }
+
+      accessToken.value = token
+    }
+    return accessToken.value
   }
 
-  const refreshAccessTocken = async () => {
+  const refreshAccessToken = async () => {
     const response = await fetch(`${BASE_API_URL}/api/users/refresh/`, {
       method: 'POST',
       credentials: 'include',
@@ -21,11 +31,11 @@ export const useAccessTokenStore = defineStore('access-tocken', () => {
     if (response.ok) {
       const data = await response.json()
       console.log(data)
-      setAccessTocken(data.access_jwt)
+      setAccessToken(data.access_jwt)
     } else {
-      throw new Error('Failed to refresh access tocken')
+      throw new Error('Failed to refresh access token')
     }
   }
 
-  return { setAccessTocken, getAccessTocken, refreshAccessTocken }
+  return { setAccessToken, getAccessToken, refreshAccessToken }
 })

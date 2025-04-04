@@ -5,7 +5,7 @@ import { ref, onMounted } from 'vue';
 import { useAccessTokenStore } from '@/store/access-token.js';
 import { useRouter } from 'vue-router';
 
-const accessTockenStore = useAccessTokenStore();
+const accessTokenStore = useAccessTokenStore();
 const router = useRouter();
 
 const loading = ref(true);
@@ -26,7 +26,7 @@ onMounted(async () => {
 
       const data = await res.json(); // преобразуем ответ в JSON
       console.log(data);
-      accessTockenStore.setAccessTocken(data.access_jwt);
+      accessTokenStore.setAccessToken(data.access_jwt);
 
       router.push('/planner/')
     } catch (err) {

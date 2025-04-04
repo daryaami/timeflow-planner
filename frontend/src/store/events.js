@@ -8,12 +8,12 @@ export const useEventsStore = defineStore('events', () => {
   const events = ref([]);
 
   const fetchEvents = async () => {
-    const accessTockenStore = useAccessTokenStore();
+    const accessTokenStore = useAccessTokenStore();
     const response = await fetch(`${BASE_API_URL}/api/events/all/`, {
       method: 'GET',
       credentials: 'include',
       headers: {
-        'Authorization': `JWT ${accessTockenStore.getAccessTocken()}`
+        'Authorization': `JWT ${accessTokenStore.getAccessToken()}`
       }
     });
     if (response.ok) {

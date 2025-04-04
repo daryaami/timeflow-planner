@@ -11,7 +11,7 @@ export const useEventsStore = defineStore("events", () => {
 
   const getEvents = async (date = new Date()) => {
     const monday = getCurrentWeekMonday(date)
-    const accessTockenStore = useAccessTokenStore();
+    const accessTokenStore = useAccessTokenStore();
 
     if (loadedMondays.filter(item => isSameDay(monday, item)).length) {
       return events.value
@@ -21,7 +21,7 @@ export const useEventsStore = defineStore("events", () => {
       method: 'GET',
       credentials: 'include',
       headers: {
-        'Authorization': `JWT ${accessTockenStore.getAccessTocken()}`,
+        'Authorization': `JWT ${accessTokenStore.getAccessToken()}`,
       }
     }
     );
@@ -39,7 +39,7 @@ export const useEventsStore = defineStore("events", () => {
       loadedMondays.push(monday);
       return data.events;
     } else if (response.status === 401) {
-      accessTockenStore.refreshAccessTocken()
+      accessTokenStore.refreshAccessToken()
     } else {
       throw new Error('Failed to fetch events');
     }
