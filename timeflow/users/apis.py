@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
+from .serializers import UserSerializer
 
 
 class LogoutView(APIView):
@@ -62,4 +63,5 @@ class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return Response(request.user, status=status.HTTP_200_OK)
+        user = UserSerializer(request.user)
+        return Response(user.data, status=status.HTTP_200_OK)
