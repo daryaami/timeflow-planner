@@ -9,7 +9,7 @@ export const useEventsStore = defineStore('events', () => {
 
   const fetchEvents = async () => {
     const accessTokenStore = useAccessTokenStore();
-    const response = await fetch(`${BASE_API_URL}/api/events/all/`, {
+    const response = await fetch(`${BASE_API_URL}/api/events/all/?start=2025-01-01&end=2025-12-31`, {
       method: 'GET',
       credentials: 'include',
       headers: {
