@@ -7,11 +7,11 @@ from events.models import UserCalendar
 User = settings.AUTH_USER_MODEL
 
 class Priority(models.TextChoices):
+    NONE = 'NONE', _('None')
     LOW = 'LOW', _('Low')
     MEDIUM = 'MEDIUM', _('Medium')
     HIGH = 'HIGH', _('High')
     CRITICAL = 'CRITICAL', _('Critical')
-
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
