@@ -1,7 +1,7 @@
 from attrs import define
 import jwt
 from google_auth.models import GoogleRefreshToken
-from google_auth.services import GoogleAccessTokens, UserInfo, save_google_refresh_token
+from google_auth.services import GoogleAccessTokens, UserInfo
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken

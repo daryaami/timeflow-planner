@@ -59,6 +59,7 @@ class GoogleCalendarService:
                 'background_color': calendar.get("backgroundColor"),
                 # 'foregroundColor': calendar.get("foregroundColor"),
                 "owner": calendar.get("accessRole", False) == 'owner',
+                "primary": calendar.get("primary", 'false'),
             }
             for calendar in calendar_list.get("items", [])
             ]

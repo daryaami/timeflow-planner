@@ -1,9 +1,11 @@
 from django.db import models
 from django.conf import settings
+from django.db.models import Q, UniqueConstraint
 
 User = settings.AUTH_USER_MODEL
 
 class UserCalendar(models.Model):
+    id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(
         User, 
         on_delete=models.CASCADE, 
@@ -12,7 +14,6 @@ class UserCalendar(models.Model):
     calendar_id = models.CharField(
         max_length=255,
         help_text="Идентификатор календаря из Google.",
-        primary_key=True
     )
     summary = models.CharField(
         max_length=255,
@@ -48,10 +49,13 @@ class UserCalendar(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     primary = models.BooleanField(default=False, help_text="Флаг, указывающий является ли основным календарем.")
 
-    class Meta:
-        unique_together = ("user", "calendar_id")
-        verbose_name = "Календарь пользователя"
-        verbose_name_plural = "Календари пользователей"
+class Meta:
+    constraints = [
+        UniqueConstraint(
+            fields=["user", "calendar_id"],
+            name="unique_user_calendar_id_when_owner_true"
+        )
+    ]
 
     def __str__(self):
         return f"{self.summary} ({self.calendar_id})"

@@ -14,7 +14,7 @@ from .services import (
 )
 from events.services import GoogleCalendarService
 from users.services import AuthService
-from .services import get_user_token, save_google_refresh_token, refresh_google_access_token
+from .services import save_google_refresh_token
 import logging
 from django.db import transaction
 
@@ -30,7 +30,7 @@ class GoogleLoginRedirectApi(PublicApi):
     def get(self, request, *args, **kwargs):
         try:
             consent = request.GET.get('consent', 'false').lower() == 'true'
-            # consent = True
+            consent = True
             
             google_login_flow = GoogleRawLoginFlowService()
             authorization_url, state = google_login_flow.get_authorization_url(consent=consent)
@@ -44,10 +44,7 @@ class GoogleLoginRedirectApi(PublicApi):
             return Response({"auth_url": authorization_url}, status=status.HTTP_200_OK)
         
         except Exception as e:
-            return Response(
-                {"error": f"Ошибка при запросе авторизации: {str(e)}"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            raise GoogleAuthError(f"Ошибка при запросе авторизации: {str(e)}")
 
 
 class GoogleLoginApi(PublicApi):
@@ -96,6 +93,7 @@ class GoogleLoginApi(PublicApi):
             with transaction.atomic():
                 auth_service = AuthService(user_info, google_tokens)
                 jwt_tokens, user, created = auth_service.authenticate_user()
+
                 access_jwt, refresh_jwt = jwt_tokens['access_token'], jwt_tokens['refresh_token']
 
                 if google_tokens.refresh_token:
@@ -107,7 +105,7 @@ class GoogleLoginApi(PublicApi):
                     calendar_service.create_user_calendars(user=user)
 
                 if created and not google_tokens.refresh_token:
-                    raise ExpiredRefreshTokenError("Google refresh token is missing. Refresh permissions.")
+                    raise ExpiredRefreshTokenError()
 
             result = {
                 "access_jwt": access_jwt,
@@ -132,13 +130,13 @@ class GoogleLoginApi(PublicApi):
         
         except InvalidGoogleTokenError as e:
             logger.exception("InvalidGoogleTokenError при авторизации: %s", e)
-            return Response({"error": "Неверный токен от Google."}, status=status.HTTP_401_UNAUTHORIZED)
+            raise InvalidGoogleTokenError()
         except ExpiredRefreshTokenError as e:
             logger.exception("ExpiredRefreshTokenError при авторизации: %s", e)
-            return Response({"error": "Google refresh token is missing. Refresh permissions."}, status=status.HTTP_403_FORBIDDEN)
+            raise ExpiredRefreshTokenError()
         except GoogleNetworkError as e:
             logger.exception("GoogleNetworkError при авторизации: %s", e)
-            return Response({"error": "Ошибка связи с Google API."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            raise GoogleNetworkError()
         except Exception as e:
             logger.exception("Неожиданная ошибка при авторизации через Google: %s", e)
-            return Response({"error": "Произошла непредвиденная ошибка."}, status=status.HTTP_400_BAD_REQUEST)
+            raise GoogleAuthError(detail=str(e))
