@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'google_auth',
     'users',
     'events',
+    'tasks',
 ]
 
 CORS_ALLOW_CREDENTIALS = True

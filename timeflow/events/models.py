@@ -46,6 +46,7 @@ class UserCalendar(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    primary = models.BooleanField(default=False, help_text="Флаг, указывающий является ли основным календарем.")
 
     class Meta:
         unique_together = ("user", "calendar_id")
