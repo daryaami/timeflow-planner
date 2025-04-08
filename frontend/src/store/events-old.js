@@ -17,7 +17,7 @@ export const useEventsStore = defineStore("events", () => {
       return events.value
     }
 
-    let response = await fetch(`${BASE_API_URL}/api/events/all/`, {
+    let response = await fetch(`${BASE_API_URL}/api/events/`, {
       method: 'GET',
       credentials: 'include',
       headers: {

@@ -1,16 +1,12 @@
 # events/services.py
-
-from django.conf import settings
 import requests
-from rest_framework import serializers
 from google_auth.services import get_user_credentials
-from core.exceptions import GoogleNetworkError
+from core.exceptions import EventNotFoundError, GoogleNetworkError
 from .models import UserCalendar
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from .serializers import UserCalendarSerializer
+from .serializers import GoogleCalendarEventSerializer, UserCalendarSerializer
 import logging
-from django.db import transaction
 from core.exceptions import CalendarCreationError, CalendarSyncError
 
 logger = logging.getLogger(__name__)
@@ -81,6 +77,19 @@ class GoogleCalendarService:
                 raise CalendarCreationError(f"Ошибка сериализации календарей: {serializer.errors}")
         except CalendarSyncError as e:
             raise CalendarSyncError(f"Ошибка синхронизации календарей для пользователя {user}: {e}")
+        
+    def toggle_calendar_select(self, user, calendar_id):
+        """
+        Переключает выбор календарей для пользователя.
+        """
+        try:
+            calendar = UserCalendar.objects.get(user=user, calendar_id=calendar_id)
+            if calendar.primary and calendar.selected:
+                raise CalendarSyncError("Нельзя отключить основной календарь")
+            calendar.selected = not calendar.selected
+            calendar.save()
+        except UserCalendar.DoesNotExist:
+            raise CalendarSyncError(f"Календарь {calendar_id} не найден")
 
     def get_events_from_calendar(self, calendar, credentials, time_min, time_max):
         """
@@ -112,37 +121,92 @@ class GoogleCalendarService:
         Получает события для всех выбранных календарей пользователя.
         Возвращает список событий, где каждое событие дополнено информацией о календаре.
         """
-        # Получаем календари, выбранные для отображения
         user_calendars = UserCalendar.objects.filter(user=user, selected=True)
         events_list = []
         credentials = self._get_credentials(user)
         for calendar in user_calendars:
             try:
                 calendar_events = self.get_events_from_calendar(calendar, credentials, time_min, time_max)
-                # Предполагаем, что в ответе содержится ключ "items" с событиями
-                events = calendar_events.get("items", [])
-                for event in events:
+                raw_events = calendar_events.get("items", [])
+                for event in raw_events:
                     event['calendar'] = calendar.calendar_id
-                    events_list.append(event)
-            except Exception as e:
-                # Можно логировать ошибки получения событий для конкретного календаря
-                # Или вернуть специальный результат для этого календаря
-                events_list.append({
-                    "error": str(e),
-                    "calendar": {
-                        "calendar_id": calendar.calendar_id,
-                        "summary": calendar.summary,
-                    }
-                })
-        return events_list
+                    serializer = GoogleCalendarEventSerializer(data=event)
+                    if serializer.is_valid():
+                        events_list.append(serializer.validated_data)
+                    else:
+                        logger.error("Failed to serialize event: %s", event, serializer.errors)
 
-    def toggle_calendar_select(self, user, calendar_id):
+            except Exception as e:
+                logger.error("Failed to get events from calendar %s: %s", calendar.calendar_id, str(e))
+
+        return events_list
+    
+    def create_event(self, user, calendar_id, event_data):
         """
-        Переключает выбор календарей для пользователя.
+        Создает событие в календаре пользователя.
         """
         try:
-            calendar = UserCalendar.objects.get(user=user, calendar_id=calendar_id)
-            calendar.selected = not calendar.selected
-            calendar.save()
-        except UserCalendar.DoesNotExist:
-            raise CalendarSyncError(f"Календарь {calendar_id} не найден")
+            service = self._build_google_service(user)
+            event = service.events().insert(calendarId=calendar_id, body=event_data).execute()
+            return event
+        except HttpError as e:
+            raise EventNotFoundError(f"Ошибка при создании события: {str(e)}")
+        
+    def update_event(self, user, calendar_id, event_id, event_data):
+        """
+        Обновляет существующее событие в календаре пользователя.
+        """
+        try:
+            service = self._build_google_service(user)
+            event = service.events().update(calendarId=calendar_id, eventId=event_id, body=event_data).execute()
+            return event
+        except HttpError as e:
+            raise EventNotFoundError(f"Ошибка при обновлении события: {str(e)}")
+        
+    def delete_event(self, user, calendar_id, event_id):
+        """
+        Удаляет событие из календаря пользователя.
+        """
+        try:
+            service = self._build_google_service(user)
+            service.events().delete(calendarId=calendar_id, eventId=event_id).execute()
+        except HttpError as e:
+            raise EventNotFoundError(f"Ошибка при удалении события: {str(e)}")
+
+
+
+# Сырой объект события
+# {
+#     "kind": "calendar#event",
+#     "etag": "\"3477214580834000\"",
+#     "id": "545o03qe1mi3ac2qd06i0p26md",
+#     "status": "confirmed",
+#     "htmlLink": "https://www.google.com/calendar/event?eid=NTQ1bzAzcWUxbWkzYWMycWQwNmkwcDI2bWQgNzNhcjlmaHU4bHU4aXNuMmhxdnZvMTk5aDhAZw",
+#     "created": "2025-02-03T18:28:10.000Z",
+#     "updated": "2025-02-03T18:28:10.417Z",
+#     "summary": "на ломоносовскую",
+#     "creator": {
+#         "email": "daryaami10@gmail.com"
+#     },
+#     "organizer": {
+#         "email": "73ar9fhu8lu8isn2hqvvo199h8@group.calendar.google.com",
+#         "displayName": "В дороге",
+#         "self": true
+#     },
+#     "start": {
+#         "dateTime": "2025-02-05T11:00:00+03:00",
+#         "timeZone": "Europe/Moscow"
+#     },
+#     "end": {
+#         "dateTime": "2025-02-05T12:30:00+03:00",
+#         "timeZone": "Europe/Moscow"
+#     },
+#     "iCalUID": "545o03qe1mi3ac2qd06i0p26md@google.com",
+#     "sequence": 0,
+#     "guestsCanInviteOthers": false,
+#     "reminders": {
+#         "useDefault": true
+#     },
+#     "eventType": "default",
+#     "calendar": "73ar9fhu8lu8isn2hqvvo199h8@group.calendar.google.com"
+# }
