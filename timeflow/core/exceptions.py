@@ -7,8 +7,8 @@ def custom_exception_handler(exc, context):
 
     if response is not None and isinstance(exc, APIException):
         response.data = {
-            "detail": exc.detail,
-            "code": exc.get_codes()
+            "error": exc.get_codes(),
+            "message": exc.detail
         }
 
     return response

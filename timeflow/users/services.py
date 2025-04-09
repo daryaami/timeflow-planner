@@ -1,8 +1,10 @@
 import logging
+from tokenize import TokenError
 from google_auth.services import GoogleAccessTokens, UserInfo
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+from rest_framework.exceptions import AuthenticationFailed
 
 logger = logging.getLogger(__name__)
 
@@ -38,3 +40,13 @@ class AuthService:
         }
         logger.debug("Generated JWT for user %s: %s", user, tokens)
         return tokens
+    
+    @staticmethod
+    def verify_refresh_token(token_str: str):
+        try:
+            token = RefreshToken(token_str)
+            return token
+        except TokenError as e:
+            logger.warning("Invalid refresh token: %s", str(e))
+            # В сервисах лучше использовать встроенные исключения - посмотреть в других
+            raise AuthenticationFailed("Invalid refresh token.")

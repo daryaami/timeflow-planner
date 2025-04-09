@@ -6,8 +6,10 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from rest_framework.exceptions import AuthenticationFailed
 
 from core.exceptions import RefreshJWTError
+from timeflow.users.services import AuthService
 from .serializers import UserSerializer
 
 logger = logging.getLogger(__name__)
@@ -94,3 +96,25 @@ class ProfileView(APIView):
         logger.info("User %s requested their profile.", request.user)
         user = UserSerializer(request.user)
         return Response(user.data, status=status.HTTP_200_OK)
+    
+class TokenPingView(APIView):
+    '''Проверяет работоспособность access_jwt и refresh_jwt токенов'''
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_description="Проверка работоспособности токена",
+        responses={200: openapi.Response(description="Токен работоспособен"),
+                   401: openapi.Response(description="Access JWT токен не найден или истек"),
+                   403: openapi.Response(description="Refresh JWT токен не найден или истек")}
+    )
+    def get(self, request):
+        refresh_jwt = request.COOKIES.get('refresh_jwt')
+        if not refresh_jwt:
+            raise RefreshJWTError("Refresh token is absent in request cookies.")
+        
+        try:
+            AuthService.verify_refresh_token(refresh_jwt)
+        except AuthenticationFailed:
+            return RefreshJWTError("Refresh token is invalid or expired.")
+
+        return Response(status=status.HTTP_200_OK)
