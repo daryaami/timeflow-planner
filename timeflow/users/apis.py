@@ -75,6 +75,9 @@ class ProfileView(APIView):
     
 class TokenPingView(APIView):
     '''Проверяет работоспособность access_jwt и refresh_jwt токенов'''
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    
     @swagger_auto_schema(
         operation_description="Проверка работоспособности токена",
         responses={200: openapi.Response(description="Токен работоспособен"),
@@ -86,14 +89,12 @@ class TokenPingView(APIView):
         if not refresh_jwt:
             return Response({"detail": "Refresh token is absent in request cookies."},
                             status=status.HTTP_403_FORBIDDEN)
-
         try:
             AuthService.verify_refresh_token(refresh_jwt)
         except AuthenticationFailed:
             return Response({"detail": "Refresh token is invalid or expired."},
                             status=status.HTTP_403_FORBIDDEN)
 
-        # Проверка access токена
         user = request.user
         if not user or not user.is_authenticated:
             return Response({"detail": "Access token is invalid or expired."},
