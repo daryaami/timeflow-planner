@@ -9,7 +9,7 @@ from drf_yasg import openapi
 from rest_framework.exceptions import AuthenticationFailed
 
 
-from timeflow.users.services import AuthService
+from users.services import AuthService
 from .serializers import UserSerializer
 
 
