@@ -47,5 +47,3 @@ class AuthService:
             return token
         except TokenError:
             raise AuthenticationFailed("Invalid or expired refresh token.")
-    
-    

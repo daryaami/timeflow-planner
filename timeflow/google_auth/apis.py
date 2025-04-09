@@ -150,9 +150,11 @@ class GoogleLoginApi(PublicApi):
                 key='refresh_jwt',
                 value=refresh_jwt,
                 httponly=True,       # Доступ к куке только через HTTP(S)
-                # secure=True,         # Отправлять только по HTTPS (в режиме разработки можно отключить)
-                samesite='Strict',   # Ограничение для кросс-сайтовых запросов
-                expires=expires
+                secure=False,         # Отправлять только по HTTPS (в режиме разработки можно отключить)
+                # samesite='Strict',   # Ограничение для кросс-сайтовых запросов
+                samesite='Lax', 
+                expires=expires,
+                # domain='localhost'
             )
 
             return response

@@ -114,11 +114,13 @@ class TokenPingView(APIView):
     def get(self, request):
         refresh_jwt = request.COOKIES.get('refresh_jwt')
         if not refresh_jwt:
+            print("No token")
             return Response({"detail": "Refresh token is absent in request cookies."},
                             status=status.HTTP_403_FORBIDDEN)
         try:
             AuthService.verify_refresh_token(refresh_jwt)
         except AuthenticationFailed:
+            print("Refresh token is invalid or expired.")
             return Response({"detail": "Refresh token is invalid or expired."},
                             status=status.HTTP_403_FORBIDDEN)
 
