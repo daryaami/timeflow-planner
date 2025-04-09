@@ -3,7 +3,6 @@ import { defineStore } from 'pinia'
 import { BASE_API_URL } from '@/config.js';
 import { useRouter } from 'vue-router';
 
-const router = useRouter()
 
 export const useAuthStore = defineStore('access-token', () => {
   const accessToken = ref<string | null>(null)
@@ -42,6 +41,8 @@ export const useAuthStore = defineStore('access-token', () => {
 
   const checkTokens = async () => {
     const token = getAccessToken()
+    const router = useRouter()
+
     if (token) {
       const response = await fetch(`${BASE_API_URL}/api/users/ping/`, {
         method: 'GET',
@@ -57,6 +58,7 @@ export const useAuthStore = defineStore('access-token', () => {
         await refreshAccessToken()
       } else if (response.status === 403) {
         await router.push('/login')
+        return false
       }
     } else {
       try {
