@@ -2,10 +2,10 @@
 import loaderVue from '../components/blocks/loaders/Loader.vue';
 
 import { ref, onMounted } from 'vue';
-import { useAccessTokenStore } from '@/store/access-token.js';
+import { useAuthStore } from '@/store/auth.ts';
 import { useRouter } from 'vue-router';
 
-const accessTokenStore = useAccessTokenStore();
+const accessTokenStore = useAuthStore();
 const router = useRouter();
 
 const loading = ref(true);

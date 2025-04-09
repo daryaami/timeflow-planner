@@ -1,7 +1,7 @@
 import {defineStore} from "pinia";
 import {ref} from "vue";
 
-import {useAccessTokenStore} from "@/store/access-token.js";
+import {useAuthStore} from "@/store/auth.ts";
 import {BASE_API_URL} from "@/config.js";
 
 interface ProfileData {
@@ -18,12 +18,12 @@ export const useProfileStore = defineStore("userData", () => {
   const profileData = ref<ProfileData | null>(null)
 
   const fetchProfileData = async (): Promise<void> => {
-    const accessTokenStore = useAccessTokenStore();
+    const authStore = useAuthStore();
     const response = await fetch(`${BASE_API_URL}/api/users/profile/`, {
       method: 'GET',
       credentials: 'include',
       headers: {
-        'Authorization': `JWT ${accessTokenStore.getAccessToken()}`
+        'Authorization': `JWT ${authStore.getAccessToken()}`
       }
     });
     if (response.ok) {

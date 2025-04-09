@@ -2,13 +2,13 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import {BASE_API_URL} from "@/config.js";
-import {useAccessTokenStore} from "@/store/access-token.js";
+import {useAuthStore} from "@/store/auth.ts";
 
 export const useEventsStore = defineStore('events', () => {
   const events = ref([]);
 
   const fetchEvents = async () => {
-    const accessTokenStore = useAccessTokenStore();
+    const accessTokenStore = useAuthStore();
     const response = await fetch(`${BASE_API_URL}/api/events/all/?start=2025-01-01&end=2025-12-31`, {
       method: 'GET',
       credentials: 'include',

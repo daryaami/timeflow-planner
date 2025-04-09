@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { getCurrentWeekMonday, isSameDay } from '@/components/js/time-utils';
 import { BASE_API_URL } from '@/config';
 
-import { useAuthStore } from '@/store/auth.ts';
+import { useAuthStore } from '@/store/auth.js';
 
 export const useEventsStore = defineStore("events", () => {
   const events = ref([]);

@@ -2,18 +2,10 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Callback from '../views/Callback.vue'
 import LoginView from '../views/LoginView.vue'
 import PlannerView from '../views/PlannerView.vue'
-import AuthCheck from "@/views/AuthCheck.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    {
-      path: '/',
-      component: AuthCheck,
-      meta: {
-        layout: 'login',
-      }
-    },
     {
       path: '/auth/google/callback',
       component: Callback,

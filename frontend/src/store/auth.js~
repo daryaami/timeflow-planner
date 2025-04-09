@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { BASE_API_URL } from '@/config';
 
-export const useAccessTokenStore = defineStore('access-token', () => {
+export const useAuthStore = defineStore('access-token', () => {
   const accessToken = ref(null)
 
   const setAccessToken = (newAccessToken) => {
