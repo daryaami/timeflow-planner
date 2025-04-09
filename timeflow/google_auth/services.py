@@ -1,20 +1,23 @@
-import jwt
-import requests
-import logging
 from random import SystemRandom
-from attrs import define
+
 from typing import Any, Dict
 from urllib.parse import urlencode
+import jwt
+import requests
+from attrs import define
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.core.cache import cache
 from oauthlib.common import UNICODE_ASCII_CHARACTER_SET
+from core.exceptions import ExpiredRefreshTokenError, InvalidGoogleTokenError, GoogleNetworkError, RefreshTokenError
+from rest_framework import status
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
-from google.auth.exceptions import RefreshError
 
-from core.exceptions import ExpiredGoogleRefreshTokenError, GoogleRefreshTokenNotFoundError, GoogleTokenExchangeError, InvalidGoogleAccessTokenError, GoogleNetworkError, ObtainGoogleAccessTokenError
+from django.core.cache import cache
+
 from google_auth.models import GoogleRefreshToken
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +64,7 @@ class GoogleRawLoginFlowService:
     ]
 
     def __init__(self):
-        self._credentials = self._google_raw_login_get_credentials()
+        self._credentials = google_raw_login_get_credentials()
 
     @staticmethod
     def _generate_state_session_token(length=30, chars=UNICODE_ASCII_CHARACTER_SET):
@@ -116,7 +119,7 @@ class GoogleRawLoginFlowService:
         response = requests.post(self.GOOGLE_ACCESS_TOKEN_OBTAIN_URL, data=data)
 
         if not response.ok:
-            raise GoogleTokenExchangeError()
+            raise InvalidGoogleTokenError("Failed to obtain access token from Google.")
 
         tokens = response.json()
 
@@ -137,7 +140,7 @@ class GoogleRawLoginFlowService:
         if not response.ok:
             raise GoogleNetworkError("Failed to obtain user info from Google.")
         
-        logger.debug("User info: %s", response.json())
+        print(response.json())
         user_info = UserInfo(**response.json())
 
         return user_info
@@ -154,7 +157,7 @@ class GoogleRawLoginFlowService:
         }
         response = requests.post(self.GOOGLE_ACCESS_TOKEN_OBTAIN_URL, data=data)
         if not response.ok:
-            raise ObtainGoogleAccessTokenError()
+            raise RefreshTokenError("Failed to refresh access token from Google.")
         tokens = response.json()
         # в ответе может не быть id_token
         new_tokens = GoogleAccessTokens(id_token=tokens.get("id_token", None), 
@@ -163,24 +166,26 @@ class GoogleRawLoginFlowService:
                                         expires_in=tokens.get("expires_in", None))
 
         return new_tokens
-    
-    def _google_raw_login_get_credentials(self) -> GoogleRawLoginCredentials:    
-        client_id = settings.GOOGLE_OAUTH2_CLIENT_ID
-        client_secret = settings.GOOGLE_OAUTH2_CLIENT_SECRET
-        project_id = settings.GOOGLE_OAUTH2_PROJECT_ID
 
-        if not client_id:
-            raise ImproperlyConfigured("GOOGLE_OAUTH2_CLIENT_ID missing in env.")
 
-        if not client_secret:
-            raise ImproperlyConfigured("GOOGLE_OAUTH2_CLIENT_SECRET missing in env.")
+# Можно перенести в класс?
+def google_raw_login_get_credentials() -> GoogleRawLoginCredentials:    
+    client_id = settings.GOOGLE_OAUTH2_CLIENT_ID
+    client_secret = settings.GOOGLE_OAUTH2_CLIENT_SECRET
+    project_id = settings.GOOGLE_OAUTH2_PROJECT_ID
 
-        if not project_id:
-            raise ImproperlyConfigured("GOOGLE_OAUTH2_PROJECT_ID missing in env.")
+    if not client_id:
+        raise ImproperlyConfigured("GOOGLE_OAUTH2_CLIENT_ID missing in env.")
 
-        credentials = GoogleRawLoginCredentials(client_id=client_id, client_secret=client_secret, project_id=project_id)
+    if not client_secret:
+        raise ImproperlyConfigured("GOOGLE_OAUTH2_CLIENT_SECRET missing in env.")
 
-        return credentials
+    if not project_id:
+        raise ImproperlyConfigured("GOOGLE_OAUTH2_PROJECT_ID missing in env.")
+
+    credentials = GoogleRawLoginCredentials(client_id=client_id, client_secret=client_secret, project_id=project_id)
+
+    return credentials
 
 
 def store_user_token(user_id: str, token: str, expires_in: int = 3600):
@@ -198,6 +203,8 @@ def get_user_token(user_id: str):
     """
     key = f"google_access_token_{user_id}"
     token = cache.get(key)
+    if not token:
+        raise InvalidGoogleTokenError("Access token expired or not found.")
     return token
 
 def get_user_credentials(user_id: str) -> Credentials:
@@ -207,26 +214,28 @@ def get_user_credentials(user_id: str) -> Credentials:
     info = {}
     try:
         token = get_user_token(user_id)
-        if token:
-            info['token'] = token
+        info['token'] = token
+    except Exception:
+        print('Нет токена в кэше')
+        logger.info('Нет токена в кэше')
+        pass
+
+    try:
         g_refresh_token = GoogleRefreshToken.objects.get(user__google_id=user_id)
-    
     except GoogleRefreshToken.DoesNotExist:
-        raise GoogleRefreshTokenNotFoundError()
+        raise ExpiredRefreshTokenError("Refresh token not found for user.")
 
     info['refresh_token'] = g_refresh_token.refresh_token
     info['client_id'] = settings.GOOGLE_OAUTH2_CLIENT_ID
     info['client_secret'] = settings.GOOGLE_OAUTH2_CLIENT_SECRET
+
 
     creds = Credentials.from_authorized_user_info(
         info=info
     )
 
     if creds.expired and creds.refresh_token:
-        try:
-            creds.refresh(Request())
-        except RefreshError:
-            raise ExpiredGoogleRefreshTokenError()
+        creds.refresh(Request())
 
     store_user_token(user_id=user_id, token=creds.token)
 
@@ -238,3 +247,29 @@ def save_google_refresh_token(user, refresh_token):
         user=user, 
         defaults={"refresh_token": refresh_token}
     )
+
+
+def refresh_google_access_token(user):
+    """
+    Обновляет access_token для пользователя, используя сохранённый refresh_token.
+    Если refresh_token не работает, выбрасывается исключение,
+    которое сообщит фронтенду, что требуется повторная авторизация.
+    """
+    try:
+        g_refresh_token = GoogleRefreshToken.objects.get(user=user)
+    except GoogleRefreshToken.DoesNotExist:
+        raise ExpiredRefreshTokenError(
+            "Refresh token not found for user. Please login again.",)
+
+    google_login_flow = GoogleRawLoginFlowService()
+
+    try:
+        new_tokens = google_login_flow.refresh_access_token(refresh_token=g_refresh_token.refresh_token)
+    except Exception:
+        raise ExpiredRefreshTokenError(
+            "Failed to refresh access token. Please login again."
+        )
+
+    store_user_token(user_id=user.google_id, token=new_tokens.access_token, expires_in=new_tokens.expires_in)
+    
+    return {"access_token": new_tokens.access_token}

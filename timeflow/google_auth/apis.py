@@ -3,19 +3,20 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.conf import settings
-from core.exceptions import GoogleAuthError, GoogleNetworkError, GoogleRefreshTokenNotFoundError, InvalidGoogleAccessTokenError, ExpiredGoogleRefreshTokenError, InvalidGoogleResponseError
+from rest_framework.exceptions import ValidationError
+from core.exceptions import GoogleAuthError, UserNotFoundError, GoogleNetworkError, InvalidGoogleResponseError, InvalidGoogleTokenError, ExpiredRefreshTokenError, GoogleTokenExchangeError, InvalidStateError
 import datetime
+
+from rest_framework.permissions import IsAuthenticated
 
 from .services import (
     GoogleRawLoginFlowService,
 )
 from events.services import GoogleCalendarService
 from users.services import AuthService
-from .services import save_google_refresh_token
+from .services import get_user_token, save_google_refresh_token, refresh_google_access_token
 import logging
 from django.db import transaction
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 
 logger = logging.getLogger(__name__)
 
@@ -24,26 +25,8 @@ class PublicApi(APIView):
     authentication_classes = ()
     permission_classes = ()
 
+
 class GoogleLoginRedirectApi(PublicApi):
-    @swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter(
-                'consent',
-                openapi.IN_QUERY,
-                description="Запросить повторное согласие от пользователя (true/false)",
-                type=openapi.TYPE_BOOLEAN
-            ),
-        ],
-        responses={200: openapi.Response("Ссылка для авторизации", schema=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                "auth_url": openapi.Schema(type=openapi.TYPE_STRING)
-            }
-        )),
-        500: "Ошибка на сервере",
-        502: "Не удалось получить URL авторизации от Google",
-        } 
-    )
     def get(self, request, *args, **kwargs):
         try:
             consent = request.GET.get('consent', 'false').lower() == 'true'
@@ -53,12 +36,18 @@ class GoogleLoginRedirectApi(PublicApi):
             authorization_url, state = google_login_flow.get_authorization_url(consent=consent)
 
             if not authorization_url:
-                raise InvalidGoogleResponseError("Не удалось получить URL авторизации от Google.")
+                return Response(
+                    {"error": "Не удалось получить URL авторизации от Google."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             return Response({"auth_url": authorization_url}, status=status.HTTP_200_OK)
         
         except Exception as e:
-            raise GoogleAuthError(f"Ошибка при запросе авторизации: {str(e)}")
+            return Response(
+                {"error": f"Ошибка при запросе авторизации: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class GoogleLoginApi(PublicApi):
@@ -67,21 +56,6 @@ class GoogleLoginApi(PublicApi):
         error = serializers.CharField(required=False)
         state = serializers.CharField(required=False)
 
-    @swagger_auto_schema(
-        query_serializer=InputSerializer,
-        responses={
-            200: openapi.Response("Успешный логин", schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    "access_token": openapi.Schema(type=openapi.TYPE_STRING, description="Access JWT токен"),
-                    "created": openapi.Schema(type=openapi.TYPE_BOOLEAN, description="Пользователь был создан"),
-                }
-            )),
-            400: "Нет параметров code или state",
-            403: "Отсутствует refresh token при создании пользователя.",
-            500: "Ошибка на сервере.",
-        }
-    )
     def get(self, request, *args, **kwargs):
         input_serializer = self.InputSerializer(data=request.GET)
         input_serializer.is_valid(raise_exception=True)
@@ -122,7 +96,6 @@ class GoogleLoginApi(PublicApi):
             with transaction.atomic():
                 auth_service = AuthService(user_info, google_tokens)
                 jwt_tokens, user, created = auth_service.authenticate_user()
-
                 access_jwt, refresh_jwt = jwt_tokens['access_token'], jwt_tokens['refresh_token']
 
                 if google_tokens.refresh_token:
@@ -134,7 +107,7 @@ class GoogleLoginApi(PublicApi):
                     calendar_service.create_user_calendars(user=user)
 
                 if created and not google_tokens.refresh_token:
-                    raise GoogleRefreshTokenNotFoundError("Отсутствует refresh token при создании пользователя")
+                    raise ExpiredRefreshTokenError("Google refresh token is missing. Refresh permissions.")
 
             result = {
                 "access_jwt": access_jwt,
@@ -157,15 +130,15 @@ class GoogleLoginApi(PublicApi):
 
             return response
         
-        except InvalidGoogleAccessTokenError as e:
-            logger.exception("InvalidGoogleAccessTokenError при авторизации: %s", e)
-            raise e
-        except ExpiredGoogleRefreshTokenError as e:
-            logger.exception("ExpiredGoogleRefreshTokenError при авторизации: %s", e)
-            raise e
+        except InvalidGoogleTokenError as e:
+            logger.exception("InvalidGoogleTokenError при авторизации: %s", e)
+            return Response({"error": "Неверный токен от Google."}, status=status.HTTP_401_UNAUTHORIZED)
+        except ExpiredRefreshTokenError as e:
+            logger.exception("ExpiredRefreshTokenError при авторизации: %s", e)
+            return Response({"error": "Google refresh token is missing. Refresh permissions."}, status=status.HTTP_403_FORBIDDEN)
         except GoogleNetworkError as e:
             logger.exception("GoogleNetworkError при авторизации: %s", e)
-            raise e
+            return Response({"error": "Ошибка связи с Google API."}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except Exception as e:
             logger.exception("Неожиданная ошибка при авторизации через Google: %s", e)
-            raise GoogleAuthError(detail=str(e))
+            return Response({"error": "Произошла непредвиденная ошибка."}, status=status.HTTP_400_BAD_REQUEST)

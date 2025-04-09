@@ -14,9 +14,6 @@ class TaskViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
 
     def get_queryset(self):
-        user = self.request.user
-        if not user.is_authenticated:
-            return Task.objects.none()
         return Task.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
@@ -28,9 +25,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        if not user.is_authenticated:
-            return Category.objects.none()
         return Category.objects.filter(
             Q(user=self.request.user) | Q(is_default=True)
         )
@@ -44,10 +38,7 @@ class TimeLogViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        if not user.is_authenticated:
-            return TimeLog.objects.none()
-        return TimeLog.objects.filter(task__user=user)
+        return TimeLog.objects.filter(task__user=self.request.user)
 
     def perform_create(self, serializer):
         task = serializer.validated_data['task']
