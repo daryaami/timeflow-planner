@@ -75,8 +75,6 @@ class ProfileView(APIView):
     
 class TokenPingView(APIView):
     '''Проверяет работоспособность access_jwt и refresh_jwt токенов'''
-    permission_classes = [IsAuthenticated]
-
     @swagger_auto_schema(
         operation_description="Проверка работоспособности токена",
         responses={200: openapi.Response(description="Токен работоспособен"),
