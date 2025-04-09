@@ -3,6 +3,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from rest_framework.exceptions import AuthenticationFailed
+
+
+from timeflow.users.services import AuthService
 from .serializers import UserSerializer
 
 
@@ -65,3 +72,33 @@ class ProfileView(APIView):
     def get(self, request):
         user = UserSerializer(request.user)
         return Response(user.data, status=status.HTTP_200_OK)
+    
+class TokenPingView(APIView):
+    '''Проверяет работоспособность access_jwt и refresh_jwt токенов'''
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_description="Проверка работоспособности токена",
+        responses={200: openapi.Response(description="Токен работоспособен"),
+                   401: openapi.Response(description="Access JWT токен не найден или истек"),
+                   403: openapi.Response(description="Refresh JWT токен не найден или истек")}
+    )
+    def get(self, request):
+        refresh_jwt = request.COOKIES.get('refresh_jwt')
+        if not refresh_jwt:
+            return Response({"detail": "Refresh token is absent in request cookies."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            AuthService.verify_refresh_token(refresh_jwt)
+        except AuthenticationFailed:
+            return Response({"detail": "Refresh token is invalid or expired."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        # Проверка access токена
+        user = request.user
+        if not user or not user.is_authenticated:
+            return Response({"detail": "Access token is invalid or expired."},
+                            status=status.HTTP_401_UNAUTHORIZED)
+
+        return Response({"detail": "Tokens are valid."}, status=status.HTTP_200_OK)
