@@ -89,6 +89,7 @@ CACHES = {
 SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_SECURE = False
 
+
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 MIDDLEWARE = [
@@ -236,6 +237,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         "rest_framework.authentication.SessionAuthentication",
     ),
+    'EXCEPTION_HANDLER': 'core.exceptions.custom_exception_handler',
 }
 
 REFRESH_TOKEN_LIFETIME = timedelta(days=7)
@@ -255,3 +257,4 @@ GOOGLE_OAUTH2_CLIENT_ID = os.getenv('GOOGLE_OAUTH2_CLIENT_ID')
 GOOGLE_OAUTH2_CLIENT_SECRET = os.getenv('GOOGLE_OAUTH2_CLIENT_SECRET')
 GOOGLE_OAUTH2_PROJECT_ID = os.getenv('GOOGLE_OAUTH2_PROJECT_ID')
 GOOGLE_API_URI = "http://localhost:5173/auth/google/callback/"
+# GOOGLE_API_URI = "https://timeflow.nowheiscursed.space/auth/google/callback/"
