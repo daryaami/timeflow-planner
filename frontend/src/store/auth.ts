@@ -1,8 +1,7 @@
-import { ref } from 'vue'
-import { defineStore } from 'pinia'
-import { BASE_API_URL } from '@/config.js';
-import { useRouter } from 'vue-router';
-
+import {ref} from 'vue'
+import {defineStore} from 'pinia'
+import {useRouter} from 'vue-router';
+import {BASE_API_URL} from '../config';
 
 export const useAuthStore = defineStore('access-token', () => {
   const accessToken = ref<string | null>(null)
@@ -14,25 +13,18 @@ export const useAuthStore = defineStore('access-token', () => {
 
   const getAccessToken = () => {
     if (!accessToken.value) {
-      const token: string = localStorage.getItem('accessToken')
-
-      if (!token) {
-        alert('Токен не найден')
-      }
-
-      accessToken.value = token
+      accessToken.value = localStorage.getItem('accessToken')
     }
     return accessToken.value
   }
 
   const refreshAccessToken = async () => {
-    const response = await fetch(`${BASE_API_URL}/api/users/refresh/`, {
+    const response = await fetch(`${BASE_API_URL}/users/refresh/`, {
       method: 'POST',
       credentials: 'include',
     })
     if (response.ok) {
       const data = await response.json()
-      console.log(data)
       setAccessToken(data.access_jwt)
     } else {
       throw new Error('Failed to refresh access token')
@@ -44,7 +36,7 @@ export const useAuthStore = defineStore('access-token', () => {
     const router = useRouter()
 
     if (token) {
-      const response = await fetch(`${BASE_API_URL}/api/users/ping/`, {
+      const response = await fetch(`${BASE_API_URL}/users/ping/`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -57,14 +49,14 @@ export const useAuthStore = defineStore('access-token', () => {
       } else if (response.status === 401) {
         await refreshAccessToken()
       } else if (response.status === 403) {
-        await router.push('/login')
+        await router.push('/login/?consent=true')
         return false
       }
     } else {
       try {
         await refreshAccessToken()
       } catch (error) {
-        await router.push('/login')
+        // await router.push('/login/?consent=true')
       }
     }
 
