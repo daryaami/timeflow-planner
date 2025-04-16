@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from 'vue';
 import { getCurrentWeekMonday, isSameDay } from '@/components/js/time-utils';
-import { BASE_API_URL } from '@/config';
+import { BASE_API_URL } from '@/config.js';
 
 import { useAuthStore } from '@/store/auth.ts';
 
@@ -17,7 +17,7 @@ export const useEventsStore = defineStore("events", () => {
       return events.value
     }
 
-    let response = await fetch(`${BASE_API_URL}/api/events/all/`, {
+    let response = await fetch(`${BASE_API_URL}/events/all/`, {
       method: 'GET',
       credentials: 'include',
       headers: {

@@ -1,8 +1,8 @@
 import {defineStore} from "pinia";
 import {ref} from "vue";
 
-import {useAuthStore} from "@/store/auth.ts";
-import {BASE_API_URL} from "@/config.js";
+import {useAuthStore} from "./auth";
+import {BASE_API_URL} from "../config";
 
 interface ProfileData {
   id: number;
@@ -19,7 +19,7 @@ export const useProfileStore = defineStore("userData", () => {
 
   const fetchProfileData = async (): Promise<void> => {
     const authStore = useAuthStore();
-    const response = await fetch(`${BASE_API_URL}/api/users/profile/`, {
+    const response = await fetch(`${BASE_API_URL}/users/profile/`, {
       method: 'GET',
       credentials: 'include',
       headers: {

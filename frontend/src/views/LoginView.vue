@@ -1,10 +1,11 @@
 <script setup>
 import GoogleBtn from '../components/blocks/buttons/google-btn.vue'
 import TimeflowLogo from '../components/icons/timeflow-logo.vue'
+import {BASE_API_URL} from "../config.ts";
 
 const loginWithGoogle = async () => {
   try {
-    const response = await fetch('http://127.0.0.1:8000/api/auth/google/redirect/', { credentials: 'include' });
+    const response = await fetch(`${BASE_API_URL}/auth/google/redirect/${window.location.search === '?consent=true'? '?consent=true' : ''}`, { credentials: 'include' });
     // Для запроса разрешений добавить параметр /?consent=true
 
     if (!response.ok) {
