@@ -9,7 +9,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.exceptions import AuthenticationFailed
 
-from core.exceptions import RefreshJWTError
+from core.exceptions import AccessJWTError, RefreshJWTError
 from users.services import AuthService
 from .serializers import UserSerializer
 
@@ -121,12 +121,10 @@ class TokenPingView(APIView):
             AuthService.verify_refresh_token(refresh_jwt)
         except AuthenticationFailed:
             print("Refresh token is invalid or expired.")
-            return Response({"detail": "Refresh token is invalid or expired."},
-                            status=status.HTTP_403_FORBIDDEN)
+            return RefreshJWTError()
 
         user = request.user
         if not user or not user.is_authenticated:
-            return Response({"detail": "Access token is invalid or expired."},
-                            status=status.HTTP_401_UNAUTHORIZED)
+            return AccessJWTError()
 
         return Response({"detail": "Tokens are valid."}, status=status.HTTP_200_OK)

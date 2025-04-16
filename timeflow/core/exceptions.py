@@ -32,11 +32,6 @@ class InvalidGoogleResponseError(APIException):
     default_detail = "Некорректный ответ от сервиса Google."
     default_code = "invalid_google_response"
 
-class InvalidGoogleAccessTokenError(APIException):
-    status_code = status.HTTP_401_UNAUTHORIZED
-    default_detail = "Google Access токен не найден или истёк."
-    default_code = "invalid_google_access_token"
-
 class ObtainGoogleAccessTokenError(APIException):
     status_code = status.HTTP_403_FORBIDDEN
     default_detail = "Не удалось получить google access token."
@@ -52,10 +47,15 @@ class GoogleRefreshTokenNotFoundError(APIException):
     default_detail = "Google Refresh-токен не найден, требуется повторный запрос разрешений."
     default_code = "google_refresh_token_not_found"
 
-class ExpiredGoogleRefreshTokenError(APIException):
+class InvalidGoogleAccessTokenError(APIException):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    default_detail = "Google Access токен не найден или истёк."
+    default_code = "invalid_google_access_token"
+
+class GoogleRefreshTokenError(APIException):
     status_code = status.HTTP_403_FORBIDDEN
     default_detail = "Google Refresh-токен истёк, требуется повторный запрос разрешений."
-    default_code = "google_refresh_token_expired"
+    default_code = "google_refresh_token_error"
 
 # 
 # JWT EXCEPTIONS
@@ -64,6 +64,12 @@ class RefreshJWTError(APIException):
     status_code = status.HTTP_403_FORBIDDEN
     default_detail = "JWT Refresh-токен не найден или истек, требуется повторная авторизация."
     default_code = "refresh_jwt_error"
+
+class AccessJWTError(APIException):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    default_detail = "Ошибка аутентификации."
+    default_code = "access_jwt_error"
+
 
 class InvalidStateError(APIException):
     status_code = status.HTTP_400_BAD_REQUEST

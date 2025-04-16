@@ -1,3 +1,8 @@
 .vscode/
 .idea/
 test.py
+k8s/
+**/Dockerfile
+**/.env
+**/nginx.conf
+compose/
