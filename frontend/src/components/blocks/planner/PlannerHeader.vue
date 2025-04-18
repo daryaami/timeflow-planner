@@ -7,6 +7,8 @@ import ProfileDropdown from "@/components/blocks/profile-dropdown.vue";
 
 const currentDate = useCurrentDateStore();
 
+const emit = defineEmits(['nextWeek', 'prevWeek', 'today'])
+
 const currentMonth = computed(() => {
   if (currentDate.date) {
     const now = currentDate.date;
@@ -21,15 +23,19 @@ const currentMonth = computed(() => {
 <template>
   <div class="planner-header">
     <div class="planner-header__left-col">
-      <RoundTextBtn text="Today" />
+      <RoundTextBtn text="Today"
+                    @click="emit('today')"
+      />
       <div class="planner-header__chevrons">
         <IconBtn
           icon="#chevron-left"
           size="s"
+          @click="emit('prevWeek')"
         />
         <IconBtn
           icon="#chevron-right"
           size="s"
+          @click="emit('nextWeek')"
         />
       </div>
       <span class="planner-header__date">{{ currentMonth }}</span>

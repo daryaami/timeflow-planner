@@ -1,6 +1,7 @@
 :root {
   --main-font: "Geologica", sans-serif;
 
+  --light-24: 200 24px / 1 var(--main-font);
   --light-20: 200 20px / 1 var(--main-font);
   --light-16: 200 16px / 1 var(--main-font);
 
@@ -9,4 +10,5 @@
   --bold-16: 400 16px / 1 var(--main-font);
   --bold-14: 400 14px / 1 var(--main-font);
   --bold-12: 400 12px / 14px var(--main-font);
+  --bold-10: 400 10px / 14px var(--main-font);
 }

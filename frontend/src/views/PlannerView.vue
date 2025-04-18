@@ -1,60 +1,45 @@
 <script setup>
 import { ref, onMounted, nextTick, watch } from 'vue';
+import FullCalendar from '@fullcalendar/vue3'
+import timeGridPlugin from '@fullcalendar/timegrid'
 
-import PlannerGrid from '@/components/blocks/planner/PlannerGrid.vue';
 import PlannerHeaderVue from '../components/blocks/planner/PlannerHeader.vue';
 import LoaderVue from '../components/blocks/loaders/Loader.vue';
 import EventInfoSidebar from '@/components/blocks/planner/EventInfoSidebar.vue';
 
-import { useEventsStore } from '@/store/events.js';
-
 import RightSidebarVue from '@/components/blocks/planner/RightSidebar.vue';
-import { useCurrentDateStore } from '@/store/currentDate';
-
 const isSidebarOpened = ref(true);
-const currentEvents = ref();
 
-const eventsStore = useEventsStore()
+const calendarInstance = ref(null);
+const calendarApi = ref(null);
 
-const currentDate = useCurrentDateStore()
+const calendarOptions = {
+  plugins: [timeGridPlugin],
+  headerToolbar: false,
+  initialView: 'timeGridWeek',
+  firstDay: 1,
+  dayHeaderFormat: {
+    weekday: 'short',
+    day: 'numeric'
+  },
+  allDaySlot: false,
+  nowIndicator: true,
+  stickyHeaderDates: 'true',
+  height: '100%',
+  dayHeaderContent: (data) => {
+    return {html: `<div class="planner__weekday">${data.text.split(' ')[1]}</div><div class="planner__day">${data.text.split(' ')[0]}</div>` }
+  },
+  slotLabelContent: (data) => {
+    return `${data.date.getHours()}:00`
+  },
+  nowIndicatorDidMount: (data) => {
 
-// Get events
-
-const isLoading = ref(true);
-
-const fetchData = async (date) => {
-  isLoading.value = true;
-
-  try {
-    const fetchedEvents = await eventsStore.fetchEvents();
-    currentEvents.value = fetchedEvents;
-  } catch (error) {
-    console.error('ошибка', error);
-  } finally {
-    isLoading.value = false;
-    await nextTick();
   }
 }
 
-// watch(currentDate, (newVal) => {
-//   fetchData(newVal.date)
-// })
-
-// watch(eventsStore, () => {
-//   fetchData(currentDate.date)
-// })
-
 onMounted(() => {
-  fetchData(currentDate.date);
-})
-
-// SelectedEvent
-
-const selectedEvent = ref(null);
-
-const cardClickHandler = (event) => {
-  selectedEvent.value = event;
-}
+  calendarApi.value = calendarInstance.value.getApi();
+});
 </script>
 
 <template>
@@ -63,20 +48,17 @@ const cardClickHandler = (event) => {
       <PlannerHeaderVue
         v-model="isSidebarOpened"
         :isLoading="isLoading"
+        @next-week="calendarApi.next()"
+        @prev-week="calendarApi.prev()"
+        @today="calendarApi.today()"
       />
       <div class="planner__loader-wrapper" v-if="isLoading">
         <LoaderVue />
       </div>
 
-
-        <PlannerGrid
-          v-if="!isLoading"
-
-          :events="currentEvents"
-          :current-date="currentDate.date"
-          :selectedEvent="selectedEvent"
-          @card-click="cardClickHandler"
-        />
+      <div class="planner__calendar-wrapper">
+        <FullCalendar :options="calendarOptions" ref="calendarInstance"/>
+      </div>
 
     </div>
     <div class="planner__right-sidebar"
@@ -102,57 +84,142 @@ const cardClickHandler = (event) => {
 </template>
 
 <style lang="scss">
-@use '@/assets/scss/colors.scss' as *;
+.planner-wrapper {
+  display: flex;
+  overflow: hidden;
+  flex-grow: 1;
+}
 
-  .planner-wrapper {
+.planner {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  flex-grow: 1;
+
+  &__weekday {
+    font: var(--bold-10);
+  }
+
+  &__day {
+    font: var(--light-24);
     display: flex;
-    overflow: hidden;
-    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    width: 39px;
+    height: 37px;
+    border-radius: 50px;
   }
 
-  .planner {
+  &__right-sidebar {
+    width: 380px;
     height: 100%;
-    display: grid;
-    grid-template-rows: auto 1fr;
+    transition: .15s;
     overflow: hidden;
-    flex-grow: 1;
 
-    &__loader-wrapper {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
-    }
-
-    &__grid-wrapper {
-      padding-left: 79px;
-      height: 100%;
-      position: relative;
-      overflow-y: scroll;
-    }
-
-    &__days-header {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      position: sticky;
-      top: 0;
-      left: 0;
-      z-index: 100;
-      padding-left: 79px;
-      margin-left: -79px;
-      background-color: $white;
-    }
-
-    &__right-sidebar {
-      width: 380px;
-      height: 100%;
-      transition: .15s;
-      overflow: hidden;
-
-      &.hidden {
-        width: 0px;
-      }
+    &.hidden {
+      width: 0;
     }
   }
+
+  &__calendar-wrapper {
+    padding-left: 9px;
+  }
+}
+
+.fc-theme-standard th {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -2px;
+    height: 46px;
+    width: calc(100% + 4px);
+    background-color: var(--bg-highlight);
+    z-index: 1;
+  }
+
+  &:first-child {
+    &::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: 0;
+      height: calc(100% + 2px);
+      width: 25px;
+      background-color: var(--bg-highlight);
+      z-index: 1;
+    }
+  }
+}
+
+.fc-scrollgrid-sync-inner {
+  position: relative;
+  z-index: 2;
+}
+
+.fc-theme-standard .fc-scrollgrid {
+  border: none
+}
+
+.fc-day-today {
+  & .planner__weekday {
+    color: var(--bg-accent);
+    position: relative;
+    z-index: 2;
+  }
+
+  & .planner__day {
+    background-color: var(--bg-accent);
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 2;
+  }
+}
+
+.fc .fc-timegrid-slot-label-cushion {
+  color: var(--text-primary-disabled);
+  font: var(--bold-12);
+}
+
+.fc-direction-ltr .fc-timegrid-slot-label-frame {
+  transform: translate(-4px, -100%);
+  position: relative;
+  z-index: 2;
+
+}
+
+.fc-scroller:has(.planner__day) {
+  overflow: hidden !important;
+}
+
+.fc .fc-col-header-cell-cushion {
+  padding: 0;
+}
+
+.fc .fc-timegrid-slot-label {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    height: calc(100% + 2px);
+    width: 37px;
+    background-color: var(--bg-highlight);
+    z-index: 1;
+  }
+}
+
+.fc .fc-timegrid-now-indicator-arrow {
+  display: none;
+}
+
+.fc-timegrid-col.fc-day-today {
+  background: none !important;
+}
 </style>
