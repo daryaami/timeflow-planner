@@ -3,7 +3,7 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.conf import settings
-from core.exceptions import GoogleAuthError, GoogleNetworkError, GoogleRefreshTokenNotFoundError, InvalidGoogleAccessTokenError, ExpiredGoogleRefreshTokenError, InvalidGoogleResponseError
+from core.exceptions import GoogleAuthError, GoogleNetworkError, GoogleRefreshTokenError, InvalidGoogleAccessTokenError, InvalidGoogleResponseError
 import datetime
 
 from .services import (
@@ -134,7 +134,7 @@ class GoogleLoginApi(PublicApi):
                     calendar_service.create_user_calendars(user=user)
 
                 if created and not google_tokens.refresh_token:
-                    raise GoogleRefreshTokenNotFoundError("Отсутствует refresh token при создании пользователя")
+                    raise GoogleRefreshTokenError("Отсутствует refresh token при создании пользователя")
 
             result = {
                 "access_jwt": access_jwt,
@@ -161,9 +161,9 @@ class GoogleLoginApi(PublicApi):
         
         except InvalidGoogleAccessTokenError as e:
             logger.exception("InvalidGoogleAccessTokenError при авторизации: %s", e)
-            raise e
-        except ExpiredGoogleRefreshTokenError as e:
-            logger.exception("ExpiredGoogleRefreshTokenError при авторизации: %s", e)
+            raise GoogleRefreshTokenError(detail=str(e))
+        except GoogleRefreshTokenError as e:
+            logger.exception("GoogleRefreshTokenError при авторизации: %s", e)
             raise e
         except GoogleNetworkError as e:
             logger.exception("GoogleNetworkError при авторизации: %s", e)

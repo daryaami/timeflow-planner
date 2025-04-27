@@ -13,7 +13,7 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from google.auth.exceptions import RefreshError
 
-from core.exceptions import ExpiredGoogleRefreshTokenError, GoogleRefreshTokenNotFoundError, GoogleTokenExchangeError, InvalidGoogleAccessTokenError, GoogleNetworkError, ObtainGoogleAccessTokenError
+from core.exceptions import GoogleRefreshTokenError, GoogleTokenExchangeError, GoogleNetworkError, ObtainGoogleAccessTokenError
 from google_auth.models import GoogleRefreshToken
 
 logger = logging.getLogger(__name__)
@@ -212,7 +212,7 @@ def get_user_credentials(user_id: str) -> Credentials:
         g_refresh_token = GoogleRefreshToken.objects.get(user__google_id=user_id)
     
     except GoogleRefreshToken.DoesNotExist:
-        raise GoogleRefreshTokenNotFoundError()
+        raise GoogleRefreshTokenError()
 
     info['refresh_token'] = g_refresh_token.refresh_token
     info['client_id'] = settings.GOOGLE_OAUTH2_CLIENT_ID
@@ -226,7 +226,7 @@ def get_user_credentials(user_id: str) -> Credentials:
         try:
             creds.refresh(Request())
         except RefreshError:
-            raise ExpiredGoogleRefreshTokenError()
+            raise GoogleRefreshTokenError()
 
     store_user_token(user_id=user_id, token=creds.token)
 

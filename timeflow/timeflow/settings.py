@@ -60,12 +60,16 @@ CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  
-    "http://127.0.0.1:5173",  
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:80",
+    "http://127.0.0.1:8000",
+    "http://timeflow.local",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",  
     "http://127.0.0.1:5173",
+    "http://127.0.0.1:80",
     "http://127.0.0.1:8000",
 ]
 
@@ -251,7 +255,7 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('JWT',),
 }
 
-BASE_BACKEND_URL = "http://localhost:8000"
+BASE_BACKEND_URL = os.getenv("BASE_BACKEND_URL", "http://localhost:8000")
 
 GOOGLE_OAUTH2_CLIENT_ID = os.getenv('GOOGLE_OAUTH2_CLIENT_ID')
 GOOGLE_OAUTH2_CLIENT_SECRET = os.getenv('GOOGLE_OAUTH2_CLIENT_SECRET')
