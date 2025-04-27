@@ -1,20 +1,29 @@
-<script setup>
-import { ref, onMounted, nextTick, watch } from 'vue';
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
 import FullCalendar from '@fullcalendar/vue3'
 import timeGridPlugin from '@fullcalendar/timegrid'
+import interactionPlugin from '@fullcalendar/interaction';
+import type { Calendar, CalendarOptions } from '@fullcalendar/core';
 
-import PlannerHeaderVue from '../components/blocks/planner/PlannerHeader.vue';
+// components
+import PlannerHeader from "../components/blocks/planner/PlannerHeader.vue";
 import LoaderVue from '../components/blocks/loaders/Loader.vue';
-import EventInfoSidebar from '@/components/blocks/planner/EventInfoSidebar.vue';
 
-import RightSidebarVue from '@/components/blocks/planner/RightSidebar.vue';
-const isSidebarOpened = ref(true);
+// store
+import {useEventsStore} from "@/store/events";
+import {getEndOfMonth, getStartOfMonth} from "@/components/js/time-utils";
 
-const calendarInstance = ref(null);
-const calendarApi = ref(null);
+const isLoading = ref<boolean>(true);
 
-const calendarOptions = {
-  plugins: [timeGridPlugin],
+const calendarInstance = ref<InstanceType<typeof FullCalendar> | null>(null);
+const calendarApi = ref<Calendar | null>(null);
+
+const eventsStore = useEventsStore()
+
+const currentDate = ref<Date | null>(null)
+
+const calendarOptions: CalendarOptions = {
+  plugins: [timeGridPlugin, interactionPlugin],
   headerToolbar: false,
   initialView: 'timeGridWeek',
   firstDay: 1,
@@ -24,7 +33,8 @@ const calendarOptions = {
   },
   allDaySlot: false,
   nowIndicator: true,
-  stickyHeaderDates: 'true',
+  stickyHeaderDates: true,
+  // slotDuration: '00:15:00',
   height: '100%',
   dayHeaderContent: (data) => {
     return {html: `<div class="planner__weekday">${data.text.split(' ')[1]}</div><div class="planner__day">${data.text.split(' ')[0]}</div>` }
@@ -32,25 +42,46 @@ const calendarOptions = {
   slotLabelContent: (data) => {
     return `${data.date.getHours()}:00`
   },
-  nowIndicatorDidMount: (data) => {
-
+  editable: true,
+  eventDurationEditable: true,
+  eventResizableFromStart: true,
+  datesSet: async (dateInfo) => {
+    currentDate.value = dateInfo.start
+    isLoading.value = true;
+    const events = await eventsStore.getEvents(getStartOfMonth(currentDate.value), getEndOfMonth(currentDate.value));
+    calendarApi.value?.removeAllEventSources();
+    calendarApi.value?.addEventSource(events);
+    isLoading.value = false;
   }
 }
 
-onMounted(() => {
-  calendarApi.value = calendarInstance.value.getApi();
+onMounted(async () => {
+  if (calendarInstance.value) {
+    calendarApi.value = calendarInstance.value.getApi();
+    currentDate.value = calendarApi.value.getDate();
+
+    const nextMonth = new Date(currentDate.value);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+    const prevMonth = new Date(currentDate.value);
+    prevMonth.setMonth(prevMonth.getMonth() - 1);
+
+    const events = await eventsStore.getEvents(getStartOfMonth(prevMonth), getEndOfMonth(nextMonth));
+    calendarApi.value.removeAllEventSources();
+    calendarApi.value.addEventSource(events);
+    isLoading.value = false;
+  }
 });
 </script>
 
 <template>
   <div class="planner-wrapper">
     <div class="planner">
-      <PlannerHeaderVue
-        v-model="isSidebarOpened"
-        :isLoading="isLoading"
-        @next-week="calendarApi.next()"
-        @prev-week="calendarApi.prev()"
-        @today="calendarApi.today()"
+      <PlannerHeader
+        @next-week="calendarApi?.next()"
+        @prev-week="calendarApi?.prev()"
+        @today="calendarApi?.today()"
+        :current-date="currentDate"
       />
       <div class="planner__loader-wrapper" v-if="isLoading">
         <LoaderVue />
@@ -59,26 +90,8 @@ onMounted(() => {
       <div class="planner__calendar-wrapper">
         <FullCalendar :options="calendarOptions" ref="calendarInstance"/>
       </div>
-
-    </div>
-    <div class="planner__right-sidebar"
-         v-if="false"
-      :class="{
-        'hidden': !isSidebarOpened,
-      }"
-    >
-      <RightSidebarVue
-        v-if="!selectedEvent"
-      />
-
-      <EventInfoSidebar
-        v-if="selectedEvent"
-        :event="selectedEvent"
-        @close="selectedEvent = null"
-      />
-    </div>
-
   </div>
+</div>
 
 
 </template>
@@ -111,19 +124,14 @@ onMounted(() => {
     border-radius: 50px;
   }
 
-  &__right-sidebar {
-    width: 380px;
-    height: 100%;
-    transition: .15s;
-    overflow: hidden;
-
-    &.hidden {
-      width: 0;
-    }
-  }
-
   &__calendar-wrapper {
     padding-left: 9px;
+  }
+
+  &__loader-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
@@ -221,5 +229,9 @@ onMounted(() => {
 
 .fc-timegrid-col.fc-day-today {
   background: none !important;
+}
+
+.fc .fc-timegrid-slot-minor {
+  border: none;
 }
 </style>

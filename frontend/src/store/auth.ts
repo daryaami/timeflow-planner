@@ -49,7 +49,7 @@ export const useAuthStore = defineStore('access-token', () => {
       } else if (response.status === 401) {
         await refreshAccessToken()
       } else if (response.status === 403) {
-        await router.push('/login/?consent=true')
+        await router.push('/login/')
         return false
       }
     } else {
