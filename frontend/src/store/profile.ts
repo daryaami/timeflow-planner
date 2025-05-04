@@ -2,7 +2,7 @@ import {defineStore} from "pinia";
 import {ref} from "vue";
 
 import {useAuthStore} from "./auth";
-import {BASE_API_URL} from "../config";
+import {BASE_API_URL} from "@/config";
 
 interface ProfileData {
   id: number;
@@ -19,16 +19,18 @@ export const useProfileStore = defineStore("userData", () => {
 
   const fetchProfileData = async (): Promise<void> => {
     const authStore = useAuthStore();
-    const response = await fetch(`${BASE_API_URL}/users/profile/`, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Authorization': `JWT ${authStore.getAccessToken()}`
-      }
-    });
-    if (response.ok) {
-      profileData.value = await response.json() as ProfileData
-    }
+
+    const fetchFn = () =>
+      fetch(`${BASE_API_URL}/users/profile/`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Authorization': `JWT ${authStore.getAccessToken()}`
+        }
+      })
+
+    const response = await authStore.ensureAuthorizedRequest(fetchFn)
+    profileData.value = await response.json() as ProfileData
   }
 
   const getProfileData = async (): Promise<ProfileData | null> => {
