@@ -14,10 +14,6 @@ const route = useRoute();
 </template>
 
 <style lang="scss">
-@use '@/assets/scss/colors.scss' as *;
-@use '@/assets/scss/mixins/fonts.scss' as *;
-@use '@/assets/scss/mixins/functions.scss' as *;
-
 * {
   box-sizing: border-box;
 }
@@ -38,7 +34,7 @@ body {
   width: 100%;
   font-weight: 300;
   font-family: var(--main-font), sans-serif;
-  background-color: $white;
+  background-color: var(--bg-primary);
 }
 
 a {

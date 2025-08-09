@@ -12,6 +12,7 @@ import LoaderVue from '../components/blocks/loaders/Loader.vue';
 // store
 import {useEventsStore} from "@/store/events";
 import {getEndOfMonth, getStartOfMonth} from "@/components/js/time-utils";
+import CreateTaskPopup from "@/components/blocks/planner/create-task-popup.vue";
 
 const isLoading = ref<boolean>(true);
 
@@ -89,6 +90,7 @@ onMounted(async () => {
 
       <div class="planner__calendar-wrapper">
         <FullCalendar :options="calendarOptions" ref="calendarInstance"/>
+        <CreateTaskPopup />
       </div>
   </div>
 </div>

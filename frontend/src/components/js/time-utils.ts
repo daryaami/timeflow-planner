@@ -28,5 +28,19 @@ const formatDate = (date: Date): string => {
 }
 
 
+const getTomorrow = (date: Date): Date => {
+  const tomorrow = new Date(date.getTime());
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return tomorrow
+}
 
-export { getStartOfMonth, getEndOfMonth, getMonthStartDates, formatDate };
+const getCurrentWeekMonday = (date: Date): Date => {
+  const dayOfWeek = date.getDay();
+  const diff = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek;
+  const monday = new Date(date);
+  monday.setDate(date.getDate() + diff);
+  return monday;
+}
+
+
+export { getStartOfMonth, getEndOfMonth, getMonthStartDates, formatDate, getTomorrow, getCurrentWeekMonday  };
