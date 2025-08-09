@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {ref} from "vue";
 import {useCalendarsStore} from "@/store/calendars";
+import {useTasksStore} from "@/store/tasks";
 
 const popup = ref(null)
 
@@ -15,7 +16,7 @@ const openPopup = async () => {
 
     const primaryCalendar = calendars.value?.find(c => c.primary)
     if (primaryCalendar) {
-      calendar.value = primaryCalendar.calendar_id
+      calendar.value = primaryCalendar.id
     }
   }
 }
@@ -26,8 +27,17 @@ const priority = ref<string>('NONE')
 const dueDate = ref(null)
 const calendar = ref<string>('')
 
+const tasksStore = useTasksStore()
+
 const submitForm = async () => {
-console.log(priority.value)
+  const data = {
+    title: title.value,
+    priority: priority.value,
+    due_date: dueDate.value,
+    calendar: calendar.value,
+  }
+
+  await tasksStore.createTask(data)
 }
 </script>
 
@@ -69,8 +79,7 @@ console.log(priority.value)
 
       <p>
         <select v-if="calendars" v-model="calendar">
-          <!--     @todo значение временно     -->
-          <option v-for="calendar in calendars" :value="calendar.calendar_id">{{ calendar.summary }}</option>
+          <option v-for="calendar in calendars" :value="calendar.id">{{ calendar.summary }}</option>
         </select>
       </p>
 
@@ -88,5 +97,6 @@ console.log(priority.value)
     position: fixed;
     right: 50px;
     bottom: 50px;
+    z-index: 1000000000;
   }
 </style>
