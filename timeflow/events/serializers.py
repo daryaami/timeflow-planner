@@ -5,10 +5,11 @@ class UserCalendarSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserCalendar
         fields = [
+            'id',
             'user', 'calendar_id', 'summary', 'description', 'owner',
             'background_color', 'selected', 'created_at', 'updated_at', 'time_zone', 'primary'
         ]
-        read_only_fields = ['user', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'user', 'created_at', 'updated_at']
 
 
 class GoogleCalendarEventSerializer(serializers.Serializer):

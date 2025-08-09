@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .services import GoogleCalendarService
-from core.exceptions import GoogleRefreshTokenError, GoogleAuthError, GoogleNetworkError
+from core.exceptions import GoogleAuthError, GoogleNetworkError
 from .models import UserCalendar
 from .serializers import GoogleCalendarEventSerializer, UserCalendarSerializer
 from drf_yasg import openapi
@@ -48,8 +48,6 @@ class UserCalendarEventsApi(APIView):
         try:
             events = calendar_service.get_all_events(request.user, time_min, time_max)
             return Response(events, status=status.HTTP_200_OK)
-        except GoogleRefreshTokenError as e:
-            raise e
         except GoogleNetworkError as e:
             raise e
         except Exception as e:
