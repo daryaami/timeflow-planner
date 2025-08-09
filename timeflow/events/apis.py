@@ -48,6 +48,8 @@ class UserCalendarEventsApi(APIView):
         try:
             events = calendar_service.get_all_events(request.user, time_min, time_max)
             return Response(events, status=status.HTTP_200_OK)
+        except ExpiredGoogleRefreshTokenError as e:
+            raise e
         except GoogleNetworkError as e:
             raise e
         except Exception as e:

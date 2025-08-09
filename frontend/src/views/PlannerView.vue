@@ -1,158 +1,237 @@
-<script setup>
-import { ref, onMounted, nextTick, watch } from 'vue';
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import FullCalendar from '@fullcalendar/vue3'
+import timeGridPlugin from '@fullcalendar/timegrid'
+import interactionPlugin from '@fullcalendar/interaction';
+import type { Calendar, CalendarOptions } from '@fullcalendar/core';
 
-import PlannerGrid from '@/components/blocks/planner/PlannerGrid.vue';
-import PlannerHeaderVue from '../components/blocks/planner/PlannerHeader.vue';
+// components
+import PlannerHeader from "../components/blocks/planner/PlannerHeader.vue";
 import LoaderVue from '../components/blocks/loaders/Loader.vue';
-import EventInfoSidebar from '@/components/blocks/planner/EventInfoSidebar.vue';
 
-import { useEventsStore } from '@/store/events.js';
+// store
+import {useEventsStore} from "@/store/events";
+import {getEndOfMonth, getStartOfMonth} from "@/components/js/time-utils";
 
-import RightSidebarVue from '@/components/blocks/planner/RightSidebar.vue';
-import { useCurrentDateStore } from '@/store/currentDate';
+const isLoading = ref<boolean>(true);
 
-const isSidebarOpened = ref(true);
-const currentEvents = ref();
+const calendarInstance = ref<InstanceType<typeof FullCalendar> | null>(null);
+const calendarApi = ref<Calendar | null>(null);
 
 const eventsStore = useEventsStore()
 
-const currentDate = useCurrentDateStore()
+const currentDate = ref<Date | null>(null)
 
-// Get events
-
-const isLoading = ref(true);
-
-const fetchData = async (date) => {
-  isLoading.value = true;
-
-  try {
-    const fetchedEvents = await eventsStore.fetchEvents();
-    currentEvents.value = fetchedEvents;
-  } catch (error) {
-    console.error('ошибка', error);
-  } finally {
+const calendarOptions: CalendarOptions = {
+  plugins: [timeGridPlugin, interactionPlugin],
+  headerToolbar: false,
+  initialView: 'timeGridWeek',
+  firstDay: 1,
+  dayHeaderFormat: {
+    weekday: 'short',
+    day: 'numeric'
+  },
+  allDaySlot: false,
+  nowIndicator: true,
+  stickyHeaderDates: true,
+  // slotDuration: '00:15:00',
+  height: '100%',
+  dayHeaderContent: (data) => {
+    return {html: `<div class="planner__weekday">${data.text.split(' ')[1]}</div><div class="planner__day">${data.text.split(' ')[0]}</div>` }
+  },
+  slotLabelContent: (data) => {
+    return `${data.date.getHours()}:00`
+  },
+  editable: true,
+  eventDurationEditable: true,
+  eventResizableFromStart: true,
+  datesSet: async (dateInfo) => {
+    currentDate.value = dateInfo.start
+    isLoading.value = true;
+    const events = await eventsStore.getEvents(getStartOfMonth(currentDate.value), getEndOfMonth(currentDate.value));
+    calendarApi.value?.removeAllEventSources();
+    calendarApi.value?.addEventSource(events);
     isLoading.value = false;
-    await nextTick();
   }
 }
 
-// watch(currentDate, (newVal) => {
-//   fetchData(newVal.date)
-// })
+onMounted(async () => {
+  if (calendarInstance.value) {
+    calendarApi.value = calendarInstance.value.getApi();
+    currentDate.value = calendarApi.value.getDate();
 
-// watch(eventsStore, () => {
-//   fetchData(currentDate.date)
-// })
+    const nextMonth = new Date(currentDate.value);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
 
-onMounted(() => {
-  fetchData(currentDate.date);
-})
+    const prevMonth = new Date(currentDate.value);
+    prevMonth.setMonth(prevMonth.getMonth() - 1);
 
-// SelectedEvent
-
-const selectedEvent = ref(null);
-
-const cardClickHandler = (event) => {
-  selectedEvent.value = event;
-}
+    const events = await eventsStore.getEvents(getStartOfMonth(prevMonth), getEndOfMonth(nextMonth));
+    calendarApi.value.removeAllEventSources();
+    calendarApi.value.addEventSource(events);
+    isLoading.value = false;
+  }
+});
 </script>
 
 <template>
   <div class="planner-wrapper">
     <div class="planner">
-      <PlannerHeaderVue
-        v-model="isSidebarOpened"
-        :isLoading="isLoading"
+      <PlannerHeader
+        @next-week="calendarApi?.next()"
+        @prev-week="calendarApi?.prev()"
+        @today="calendarApi?.today()"
+        :current-date="currentDate"
       />
       <div class="planner__loader-wrapper" v-if="isLoading">
         <LoaderVue />
       </div>
 
-
-        <PlannerGrid
-          v-if="!isLoading"
-
-          :events="currentEvents"
-          :current-date="currentDate.date"
-          :selectedEvent="selectedEvent"
-          @card-click="cardClickHandler"
-        />
-
-    </div>
-    <div class="planner__right-sidebar"
-         v-if="false"
-      :class="{
-        'hidden': !isSidebarOpened,
-      }"
-    >
-      <RightSidebarVue
-        v-if="!selectedEvent"
-      />
-
-      <EventInfoSidebar
-        v-if="selectedEvent"
-        :event="selectedEvent"
-        @close="selectedEvent = null"
-      />
-    </div>
-
+      <div class="planner__calendar-wrapper">
+        <FullCalendar :options="calendarOptions" ref="calendarInstance"/>
+      </div>
   </div>
+</div>
 
 
 </template>
 
 <style lang="scss">
-@use '@/assets/scss/colors.scss' as *;
+.planner-wrapper {
+  display: flex;
+  overflow: hidden;
+  flex-grow: 1;
+}
 
-  .planner-wrapper {
+.planner {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  flex-grow: 1;
+
+  &__weekday {
+    font: var(--bold-10);
+  }
+
+  &__day {
+    font: var(--light-24);
     display: flex;
-    overflow: hidden;
-    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    width: 39px;
+    height: 37px;
+    border-radius: 50px;
   }
 
-  .planner {
-    height: 100%;
-    display: grid;
-    grid-template-rows: auto 1fr;
-    overflow: hidden;
-    flex-grow: 1;
+  &__calendar-wrapper {
+    padding-left: 9px;
+  }
 
-    &__loader-wrapper {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 100%;
-    }
+  &__loader-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
 
-    &__grid-wrapper {
-      padding-left: 79px;
-      height: 100%;
-      position: relative;
-      overflow-y: scroll;
-    }
+.fc-theme-standard th {
+  position: relative;
 
-    &__days-header {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      position: sticky;
-      top: 0;
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -2px;
+    height: 46px;
+    width: calc(100% + 4px);
+    background-color: var(--bg-highlight);
+    z-index: 1;
+  }
+
+  &:first-child {
+    &::before {
+      content: '';
+      position: absolute;
+      top: -1px;
       left: 0;
-      z-index: 100;
-      padding-left: 79px;
-      margin-left: -79px;
-      background-color: $white;
-    }
-
-    &__right-sidebar {
-      width: 380px;
-      height: 100%;
-      transition: .15s;
-      overflow: hidden;
-
-      &.hidden {
-        width: 0px;
-      }
+      height: calc(100% + 2px);
+      width: 25px;
+      background-color: var(--bg-highlight);
+      z-index: 1;
     }
   }
+}
+
+.fc-scrollgrid-sync-inner {
+  position: relative;
+  z-index: 2;
+}
+
+.fc-theme-standard .fc-scrollgrid {
+  border: none
+}
+
+.fc-day-today {
+  & .planner__weekday {
+    color: var(--bg-accent);
+    position: relative;
+    z-index: 2;
+  }
+
+  & .planner__day {
+    background-color: var(--bg-accent);
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 2;
+  }
+}
+
+.fc .fc-timegrid-slot-label-cushion {
+  color: var(--text-primary-disabled);
+  font: var(--bold-12);
+}
+
+.fc-direction-ltr .fc-timegrid-slot-label-frame {
+  transform: translate(-4px, -100%);
+  position: relative;
+  z-index: 2;
+
+}
+
+.fc-scroller:has(.planner__day) {
+  overflow: hidden !important;
+}
+
+.fc .fc-col-header-cell-cushion {
+  padding: 0;
+}
+
+.fc .fc-timegrid-slot-label {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    height: calc(100% + 2px);
+    width: 37px;
+    background-color: var(--bg-highlight);
+    z-index: 1;
+  }
+}
+
+.fc .fc-timegrid-now-indicator-arrow {
+  display: none;
+}
+
+.fc-timegrid-col.fc-day-today {
+  background: none !important;
+}
+
+.fc .fc-timegrid-slot-minor {
+  border: none;
+}
 </style>
