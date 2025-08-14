@@ -5,6 +5,7 @@ import App from './App.vue'
 import router from './router'
 import './assets/css/fonts.css'
 import './assets/css/colors.css'
+import 'vue-multiselect/dist/vue-multiselect.css'
 
 const app = createApp(App)
 

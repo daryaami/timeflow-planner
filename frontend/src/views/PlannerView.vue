@@ -12,7 +12,7 @@ import LoaderVue from '../components/blocks/loaders/Loader.vue';
 // store
 import {useEventsStore} from "@/store/events";
 import {getEndOfMonth, getStartOfMonth} from "@/components/js/time-utils";
-import CreateTaskPopup from "@/components/blocks/planner/create-task-popup.vue";
+import CreateTaskPopup from "@/components/blocks/planner/CreateTaskPopup.vue";
 import TasksList from "@/components/blocks/planner/TasksList.vue";
 
 const isLoading = ref<boolean>(true);
