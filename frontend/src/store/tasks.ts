@@ -1,9 +1,14 @@
 import {defineStore} from "pinia";
 import {BASE_API_URL} from "@/config";
-import {useAuthStore} from "@/store/auth";
+import {useAuthStore} from "@/store/auth"
+import {ref} from "vue";
 
 export const useTasksStore = defineStore('tasks', () => {
+  const tasks = ref(null)
+
   const authStore = useAuthStore()
+
+
   const createTask = async (data: object) => {
     await fetch(`${BASE_API_URL}/tasks/`, {
       method: 'POST',
@@ -16,5 +21,26 @@ export const useTasksStore = defineStore('tasks', () => {
     })
   }
 
-  return { createTask }
+  const fetchTasks = async () => {
+    const fetchFn = () => fetch(`${BASE_API_URL}/tasks`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Authorization': `JWT ${authStore.getAccessToken()}`
+        }
+      })
+
+    const response = await authStore.ensureAuthorizedRequest(fetchFn)
+    tasks.value = await response.json()
+  }
+
+  const getTasks = async () => {
+    if (!tasks.value) {
+      await fetchTasks()
+    }
+
+    return tasks.value
+  }
+
+  return { createTask, getTasks, tasks }
 })

@@ -37,7 +37,7 @@ export const useEventsStore = defineStore('events', () => {
         headers: {
           'Authorization': `JWT ${authStore.getAccessToken()}`
         }
-    })
+      })
 
     const response = await authStore.ensureAuthorizedRequest(fetchFn)
 

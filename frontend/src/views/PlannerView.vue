@@ -13,6 +13,7 @@ import LoaderVue from '../components/blocks/loaders/Loader.vue';
 import {useEventsStore} from "@/store/events";
 import {getEndOfMonth, getStartOfMonth} from "@/components/js/time-utils";
 import CreateTaskPopup from "@/components/blocks/planner/create-task-popup.vue";
+import TasksList from "@/components/blocks/planner/TasksList.vue";
 
 const isLoading = ref<boolean>(true);
 
@@ -93,6 +94,7 @@ onMounted(async () => {
         <CreateTaskPopup />
       </div>
   </div>
+    <TasksList />
 </div>
 
 
@@ -128,6 +130,7 @@ onMounted(async () => {
 
   &__calendar-wrapper {
     padding-left: 9px;
+    position: relative;
   }
 
   &__loader-wrapper {

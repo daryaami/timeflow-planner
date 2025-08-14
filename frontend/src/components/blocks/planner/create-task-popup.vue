@@ -94,7 +94,7 @@ const submitForm = async () => {
 
 <style scoped lang="scss">
   .button {
-    position: fixed;
+    position: absolute;
     right: 50px;
     bottom: 50px;
     z-index: 1000000000;
