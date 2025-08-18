@@ -19,6 +19,8 @@ export const useTasksStore = defineStore('tasks', () => {
       },
       body: JSON.stringify(data)
     })
+
+    await fetchTasks()
   }
 
   const fetchTasks = async () => {
@@ -42,5 +44,5 @@ export const useTasksStore = defineStore('tasks', () => {
     return tasks.value
   }
 
-  return { createTask, getTasks, tasks }
+  return { tasks, fetchTasks, getTasks, createTask }
 })

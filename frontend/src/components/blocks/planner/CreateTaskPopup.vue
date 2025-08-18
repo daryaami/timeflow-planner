@@ -12,7 +12,7 @@ const calendars = ref(null)
 
 
 const openPopup = async () => {
-  popup?.value.showModal()
+  popup?.value?.showModal()
 
   if (!calendars.value) {
     calendars.value = await calendarsStore.getCalendars()
@@ -55,9 +55,9 @@ const PRIORITY_OPTIONS = [
 const submitForm = async () => {
   const data = {
     title: title.value,
-    priority: priority.value,
+    priority: priority.value.value,
     due_date: dueDate.value,
-    calendar: calendar.value,
+    calendar: calendar.value.id,
   }
 
   await tasksStore.createTask(data)

@@ -29,6 +29,14 @@ export const useCalendarsStore = () => {
     return calendars.value
   }
 
+  const getCalendarById = async (id) => {
+    if (!calendars.value) {
+      await fetchCalendars();
+    }
 
-  return { getCalendars }
+    return calendars.value.find(calendar => calendar.id === id)
+  }
+
+
+  return { getCalendars, getCalendarById }
 }
