@@ -10,13 +10,17 @@
   --icon-hover: #00d0c5;
   --bg-accent: #3b61e8;
   --text-primary-disabled: #858893;
+
   --bg-primary-hover: #e8e8e8;
   --bg-accent-hover: #2d54dc;
   --bg-accent-secondary: #67d0de;
   --bg-accent-secondary-hover: #49b5c4;
   --bg-highlight: #fff;
   --bg-secondary: #f6f6f6;
+
   --stroke-primary: #d9d9d9;
+  --stroke-secondary: #C5C5C5;
+
   --text-highlight: #fff;
   --text-accent: #3b61e8;
 
