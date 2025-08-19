@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
+from zoneinfo import ZoneInfo
 
 from events.models import UserCalendar
 
@@ -28,24 +29,23 @@ class Category(models.Model):
     def __str__(self):
         return self.name
     
-
 class Task(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks')
     title = models.CharField(max_length=255)
     priority = models.CharField(max_length=10, choices=Priority.choices, default=Priority.MEDIUM)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='tasks')
     due_date = models.DateTimeField(null=True, blank=True)
+    duration = models.IntegerField(null=True, blank=True, default=None)
     calendar = models.ForeignKey(UserCalendar, on_delete=models.CASCADE, related_name='tasks')
     completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    notes = models.TextField(null=True, blank=True)
 
     class Meta:
         ordering = ['-due_date', '-created_at']
 
     def save(self, *args, **kwargs):
-        if self.due_date is not None:
-            self.due_date = self.due_date.astimezone(self.calendar.time_zone)
         super().save(*args, **kwargs)
 
     def __str__(self):
