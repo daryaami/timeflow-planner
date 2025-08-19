@@ -6,6 +6,7 @@ import router from './router'
 import './assets/css/fonts.css'
 import './assets/css/colors.css'
 import 'vue-multiselect/dist/vue-multiselect.css'
+import '@vuepic/vue-datepicker/dist/main.css'
 
 const app = createApp(App)
 

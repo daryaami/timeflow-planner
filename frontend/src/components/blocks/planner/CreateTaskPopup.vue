@@ -4,6 +4,7 @@ import {useCalendarsStore} from "@/store/calendars";
 import {useTasksStore} from "@/store/tasks";
 
 import MultiSelect from 'vue-multiselect'
+import VueDatePicker from "@vuepic/vue-datepicker";
 
 const popup = ref(null)
 
@@ -69,7 +70,8 @@ const submitForm = async () => {
     + Add
   </button>
 
-  <dialog ref="popup"
+  <dialog class="popup"
+    ref="popup"
   >
     <form @submit.prevent="submitForm">
       <input type="text" placeholder="add title" v-model="title">
@@ -93,7 +95,10 @@ const submitForm = async () => {
 
       <p>
         <label>Add due date</label>
-        <input type="datetime-local" v-model="dueDate">
+        <VueDatePicker
+          v-model="dueDate"
+          @update:model-value="val => dueDate = val ? val.toISOString() : null"
+        />
       </p>
 
       <p>
@@ -123,10 +128,14 @@ const submitForm = async () => {
 </template>
 
 <style scoped lang="scss">
-  .button {
-    position: absolute;
-    right: 50px;
-    bottom: 50px;
-    z-index: 1000000000;
-  }
+.popup {
+  overflow: visible;
+}
+
+.button {
+  position: absolute;
+  right: 50px;
+  bottom: 50px;
+  z-index: 1000000000;
+}
 </style>
