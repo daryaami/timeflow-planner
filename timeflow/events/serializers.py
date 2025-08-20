@@ -50,3 +50,34 @@ class GoogleCalendarEventSerializer(serializers.Serializer):
                 representation[time_field] = time_data
 
         return representation
+    
+
+class GoogleCalendarEventCreateSerializer(serializers.Serializer):
+    summary = serializers.CharField(required=True)  # название события
+    description = serializers.CharField(required=False, allow_blank=True)
+    # start/end принимаем в виде словаря с ключом dateTime или date
+    start = serializers.DictField(required=True)
+    end = serializers.DictField(required=True)
+    calendar = serializers.CharField(required=False)
+
+    def validate(self, data):
+        """
+        Проверяем что start/end есть и имеют правильный формат
+        """
+        for field in ("start", "end"):
+            time_data = data.get(field, {})
+            if not isinstance(time_data, dict):
+                raise serializers.ValidationError({field: "Ожидается словарь"})
+            if not (time_data.get("dateTime") or time_data.get("date")):
+                raise serializers.ValidationError({
+                    field: "Нужно указать либо dateTime, либо date"
+                })
+        return data
+    
+class GoogleCalendarEventUpdateSerializer(GoogleCalendarEventCreateSerializer):
+    event_id = serializers.CharField(required=True)
+    calendar = serializers.CharField(required=False, default="primary")
+
+class GoogleCalendarEventDeleteSerializer(serializers.Serializer):
+    calendar = serializers.CharField(required=False, default="primary")
+    event_id = serializers.CharField(required=True)

@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from .services import GoogleCalendarService
 from core.exceptions import GoogleAuthError, GoogleNetworkError
 from .models import UserCalendar
-from .serializers import GoogleCalendarEventSerializer, UserCalendarSerializer
+from .serializers import GoogleCalendarEventCreateSerializer, GoogleCalendarEventDeleteSerializer, GoogleCalendarEventSerializer, GoogleCalendarEventUpdateSerializer, UserCalendarSerializer
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
@@ -55,28 +55,35 @@ class UserCalendarEventsApi(APIView):
         
     @swagger_auto_schema(
         operation_description="Создать новое событие в календаре пользователя",
-        request_body=GoogleCalendarEventSerializer,
+        request_body=GoogleCalendarEventCreateSerializer,
         responses={
-            200: GoogleCalendarEventSerializer,
+            201: GoogleCalendarEventSerializer,
             400: openapi.Response('Ошибка в данных события'),
         }
     )
     def post(self, request, *args, **kwargs):
         '''Создать новое событие в календаре пользователя'''
-        calendar_id = request.data.get('calendar_id')
-        event_data = request.data.get('event_data')
+        # calendar_id = request.data.get('calendar_id')
+        # event_data = request.data.get('event_data')
 
-        if not calendar_id or not event_data:
-            return Response({"error": "Параметры calendar_id и event_data обязательны"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = GoogleCalendarEventCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        calendar_id = serializer.validated_data.pop("calendar", "primary")
+        event_data = serializer.validated_data
+
+        # if not calendar_id or not event_data:
+        #     return Response({"error": "Параметры calendar_id и event_data обязательны"}, status=status.HTTP_400_BAD_REQUEST)
 
         calendar_service = GoogleCalendarService()
         event = calendar_service.create_event(request.user, calendar_id, event_data)
-        serializer = GoogleCalendarEventSerializer(event)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        response_serializer = GoogleCalendarEventSerializer(event)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
     
     @swagger_auto_schema(
         operation_description="Обновить событие в календаре пользователя",
-        request_body=GoogleCalendarEventSerializer,
+        request_body=GoogleCalendarEventUpdateSerializer,
         responses={
             200: GoogleCalendarEventSerializer,
             400: openapi.Response('Ошибка в данных события')
@@ -84,35 +91,52 @@ class UserCalendarEventsApi(APIView):
     )
     def put(self, request, *args, **kwargs):
         '''Обновить событие в календаре пользователя'''
-        calendar_id = request.data.get('calendar_id')
-        event_id = request.data.get('event_id')
-        event_data = request.data.get('event_data')
 
-        if not calendar_id or not event_id or not event_data:
-            return Response({"error": "Параметры calendar_id, event_id и event_data обязательны"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = GoogleCalendarEventUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # calendar_id = request.data.get('calendar_id')
+        # event_id = request.data.get('event_id')
+        # event_data = request.data.get('event_data')
+
+        calendar_id = serializer.validated_data.pop("calendar", "primary")
+        event_id = serializer.validated_data.pop("event_id")
+        event_data = serializer.validated_data
+
+        # if not calendar_id or not event_id or not event_data:
+        #     return Response({"error": "Параметры calendar_id, event_id и event_data обязательны"}, status=status.HTTP_400_BAD_REQUEST)
 
         calendar_service = GoogleCalendarService()
         event = calendar_service.update_event(request.user, calendar_id, event_id, event_data)
-        serializer = GoogleCalendarEventSerializer(event)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+        response_serializer = GoogleCalendarEventSerializer(event)
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
     
     @swagger_auto_schema(
         operation_description="Удалить событие из календаря пользователя",
+        request_body=GoogleCalendarEventDeleteSerializer,
         responses={
-            200: openapi.Response('Событие успешно удалено'),
+            204: openapi.Response('Событие успешно удалено'),
             400: openapi.Response('Ошибка в параметрах'),
         }
     )
     def delete(self, request, *args, **kwargs):
-        calendar_id = request.data.get('calendar_id')
-        event_id = request.data.get('event_id')
+        # calendar_id = request.data.get('calendar_id')
+        # event_id = request.data.get('event_id')
 
-        if not calendar_id or not event_id:
-            return Response({"error": "Параметры calendar_id и event_id обязательны"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = GoogleCalendarEventDeleteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        calendar_id = serializer.validated_data.get("calendar", "primary")
+        event_id = serializer.validated_data["event_id"]
+
+        # if not calendar_id or not event_id:
+        #     return Response({"error": "Параметры calendar_id и event_id обязательны"}, status=status.HTTP_400_BAD_REQUEST)
 
         calendar_service = GoogleCalendarService()
         calendar_service.delete_event(request.user, calendar_id, event_id)
-        return Response({"success": "Событие успешно удалено"}, status=status.HTTP_200_OK)
+        
+        return Response({"success": "Событие успешно удалено"}, status=status.HTTP_204_NO_CONTENT)
 
 
 class UserCalendarListApi(APIView):
