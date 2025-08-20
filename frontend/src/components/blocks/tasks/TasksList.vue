@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ComponentPublicInstance, onUnmounted, ref, watch} from "vue";
+import {ComponentPublicInstance, ref, watch} from "vue";
 import {useTasksStore} from "@/store/tasks";
 import {onMounted} from "vue";
 import { Draggable } from '@fullcalendar/interaction';
@@ -67,7 +67,7 @@ const setTaskEl = (el: Element | ComponentPublicInstance | null, task: UiTask) =
       <h2 class="tasks-wrapper__title">Plan now</h2>
       <span class="tasks-wrapper__counter" v-if="tasksStore.tasks.length">{{ tasksStore.tasks.length }}</span>
     </div>
-    <div class="tasks__list">
+    <TransitionGroup name="list" tag="div" class="tasks__list">
       <div
           v-for="task in tasks"
           :key="task.id"
@@ -76,12 +76,31 @@ const setTaskEl = (el: Element | ComponentPublicInstance | null, task: UiTask) =
       >
         <TaskItem :task="task" />
       </div>
-    </div>
+    </TransitionGroup>
   </div>
 </template>
 
 <style scoped lang="scss">
 @use '@/assets/scss/mixins/resets' as *;
+
+.list-move, /* apply transition to moving elements */
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.5s ease;
+}
+
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+}
+
+/* ensure leaving items are taken out of layout flow so that moving
+   animations can be calculated correctly. */
+.list-leave-active {
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+}
 
 .tasks-wrapper {
   min-width: 330px;
@@ -120,6 +139,11 @@ const setTaskEl = (el: Element | ComponentPublicInstance | null, task: UiTask) =
     display: flex;
     flex-direction: column;
     gap: 8px;
+    position: relative;
+
+    & .task-item {
+      width: 100%;
+    }
   }
 }
 </style>
