@@ -72,7 +72,7 @@ class UserCalendarEventsApi(APIView):
         serializer = GoogleCalendarEventCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        calendar_id = serializer.validated_data.pop("calendar", "primary")
+        calendar_id = serializer.validated_data.pop("calendar_id")
         event_data = serializer.validated_data
 
         # if not calendar_id or not event_data:
@@ -102,7 +102,7 @@ class UserCalendarEventsApi(APIView):
         # event_id = request.data.get('event_id')
         # event_data = request.data.get('event_data')
 
-        calendar_id = serializer.validated_data.pop("calendar", "primary")
+        calendar_id = serializer.validated_data.pop("calendar_id")
         event_id = serializer.validated_data.pop("event_id")
         event_data = serializer.validated_data
 
@@ -130,7 +130,7 @@ class UserCalendarEventsApi(APIView):
         serializer = GoogleCalendarEventDeleteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        calendar_id = serializer.validated_data.get("calendar", "primary")
+        calendar_id = serializer.validated_data["calendar_id"]
         event_id = serializer.validated_data["event_id"]
 
         # if not calendar_id or not event_id:

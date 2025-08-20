@@ -54,10 +54,11 @@ class GoogleCalendarEventSerializer(serializers.Serializer):
 
 class GoogleCalendarEventCreateSerializer(serializers.Serializer):
     summary = serializers.CharField(required=True)  # название события
+    calendar_id = serializers.IntegerField(required=True)
+
     # start/end принимаем в виде словаря с ключом dateTime или date
     start = serializers.DictField(required=True)
     end = serializers.DictField(required=True)
-    calendar = serializers.CharField(required=False)
 
     def validate(self, data):
         """
@@ -75,17 +76,17 @@ class GoogleCalendarEventCreateSerializer(serializers.Serializer):
     
 class GoogleCalendarEventUpdateSerializer(GoogleCalendarEventCreateSerializer):
     event_id = serializers.CharField(required=True)
-    calendar = serializers.CharField(required=False, default="primary")
+    calendar_id = serializers.IntegerField(required=True)
 
 class GoogleCalendarEventDeleteSerializer(serializers.Serializer):
-    calendar = serializers.CharField(required=False, default="primary")
     event_id = serializers.CharField(required=True)
+    calendar_id = serializers.IntegerField(required=True)
 
 class EventFromTaskSerializer(serializers.Serializer):
-    task_id = serializers.IntegerField()
-    calendar_id = serializers.IntegerField()
-    start = serializers.DateTimeField()
-    end = serializers.DateTimeField()
+    task_id = serializers.IntegerField(required=True)
+    calendar_id = serializers.IntegerField(required=True)
+    start = serializers.DateTimeField(required=True)
+    end = serializers.DateTimeField(required=True)
 
     def validate(self, data):
         if data['end'] <= data['start']:
