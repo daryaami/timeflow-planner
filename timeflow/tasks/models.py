@@ -35,7 +35,7 @@ class Task(models.Model):
     priority = models.CharField(max_length=10, choices=Priority.choices, default=Priority.MEDIUM)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='tasks')
     due_date = models.DateTimeField(null=True, blank=True)
-    duration = models.IntegerField(null=True, blank=True, default=None)
+    duration = models.SmallIntegerField(null=True, blank=True, default=None)
     calendar = models.ForeignKey(UserCalendar, on_delete=models.CASCADE, related_name='tasks')
     completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
