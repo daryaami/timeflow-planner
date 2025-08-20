@@ -4,11 +4,15 @@ import { BASE_API_URL } from '@/config'
 import { useAuthStore } from './auth'
 import { ref } from 'vue'
 import type { EventInput } from '@fullcalendar/core'
+import {DropArg} from "@fullcalendar/interaction";
+import {useTasksStore} from "@/store/tasks";
 
 export const useEventsStore = defineStore('events', () => {
   const events = ref([] as Array<EventInput>)
   let fetchedKeys = [] as Array<string>
+
   const authStore = useAuthStore()
+  const taskStore = useTasksStore()
 
   const adaptEventToFullCalendar = (event: any): EventInput => {
     return {
@@ -60,8 +64,34 @@ export const useEventsStore = defineStore('events', () => {
     return events.value
   }
 
-  const createEvent = () => {
+  const createEvent = (eventData: DropArg) => {
+    const task = taskStore.getTaskById(Number(eventData.draggedEl.dataset.taskId))
 
+    console.log(eventData)
+    if (!task) return
+
+    const addMinutes = (date: Date, minutes: number): Date => {
+      const copy = new Date(date) // чтобы не мутировать оригинал
+      copy.setMinutes(copy.getMinutes() + minutes)
+      return copy
+    }
+
+    const data = {
+      summary: task.title,
+      description: task.notes? task.notes : '',
+      start: eventData.date.toISOString(),
+      end: addMinutes(eventData.date, task.duration || 30).toISOString(),
+    }
+
+    fetch(`${BASE_API_URL}/events/`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `JWT ${authStore.getAccessToken()}`
+      },
+      body: JSON.stringify(data)
+    })
   }
 
   return { events, getEvents, createEvent }

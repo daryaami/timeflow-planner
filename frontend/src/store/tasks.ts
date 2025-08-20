@@ -60,5 +60,9 @@ export const useTasksStore = defineStore('tasks', () => {
     await fetchTasks()
   }
 
-  return { tasks, fetchTasks, getTasks, createTask, deleteTask }
+  const getTaskById = (id: number) => {
+    return tasks.value.find(task => task.id === id)
+  }
+
+  return { tasks, fetchTasks, getTasks, createTask, deleteTask, getTaskById}
 })
