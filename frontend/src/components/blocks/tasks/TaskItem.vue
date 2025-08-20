@@ -2,10 +2,48 @@
 import {Task} from "@/types/task";
 import IconBtn from "@/components/blocks/buttons/icon-btn.vue";
 import {useTasksStore} from "@/store/tasks";
+import {computed} from "vue";
 
-defineProps<{
-  task: Task
-}>()
+const props = defineProps<{ task: Task }>()
+
+const formatDate = (date: Date): string => {
+  const now = new Date()
+
+  // Находим начало и конец текущей недели
+  const startOfWeek = new Date(now)
+  startOfWeek.setDate(now.getDate() - now.getDay()) // воскресенье
+  startOfWeek.setHours(0, 0, 0, 0)
+
+  const endOfWeek = new Date(startOfWeek)
+  endOfWeek.setDate(startOfWeek.getDate() + 6) // суббота
+  endOfWeek.setHours(23, 59, 59, 999)
+
+  if (date >= startOfWeek && date <= endOfWeek) {
+    // формат "Wed 18:30"
+    return date.toLocaleString("en-US", {
+      weekday: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    }).replace(",", "")
+  } else {
+    // формат "31 July"
+    return date.toLocaleString("en-US", {
+      day: "numeric",
+      month: "long"
+    })
+  }
+}
+
+
+const dueDate = computed(() => {
+  if (!props.task.due_date) return
+  const date = new Date(props.task.due_date)
+
+  const dateString = formatDate(date)
+
+  return `Due ${dateString}`
+})
 
 const tasksStore = useTasksStore()
 </script>
@@ -16,7 +54,7 @@ const tasksStore = useTasksStore()
       <input type="checkbox" class="visually-hidden">
     </label>
     <span class="task-item__title">{{ task.title }}</span>
-    <span class="task-item__due">Due Wed 18:30</span>
+    <span class="task-item__due" v-if="dueDate">{{ dueDate }}</span>
     <IconBtn
       @click.prevent="tasksStore.deleteTask(task.id)"
       class="task-item__delete"

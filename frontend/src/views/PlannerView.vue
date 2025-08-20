@@ -54,6 +54,12 @@ const calendarOptions: CalendarOptions = {
     calendarApi.value?.removeAllEventSources();
     calendarApi.value?.addEventSource(events);
     isLoading.value = false;
+  },
+  eventDragStop: () => {
+    console.log('drag stop')
+  },
+  drop: () => {
+    console.log('drop')
   }
 }
 

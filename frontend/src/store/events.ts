@@ -60,5 +60,9 @@ export const useEventsStore = defineStore('events', () => {
     return events.value
   }
 
-  return { events, getEvents }
+  const createEvent = () => {
+
+  }
+
+  return { events, getEvents, createEvent }
 })

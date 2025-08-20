@@ -6,6 +6,7 @@ import {Task} from "@/types/task";
 
 export const useTasksStore = defineStore('tasks', () => {
   const tasks = ref<Task[]>([])
+  let isInitialized = false;
 
   const authStore = useAuthStore()
 
@@ -23,8 +24,9 @@ export const useTasksStore = defineStore('tasks', () => {
   }
 
   const getTasks = async (): Promise<Task[]> => {
-    if (!tasks.value || !tasks.value.length) {
+    if (!isInitialized) {
       await fetchTasks()
+      isInitialized = true
     }
 
     return tasks.value as Task[]
