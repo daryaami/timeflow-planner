@@ -9,23 +9,26 @@ import {Task, UiTask} from "@/types/task";
 const tasksStore = useTasksStore()
 
 const tasks = ref<UiTask[]>([])
+const draggableEls: Draggable[] = []
 
 const toUiTasks = (items: Task[]): UiTask[] =>
   items.map((t) => ({ ...t, el: null }));
 
-const updateTasks = async () => {
+const loadTasks = async () => {
+  draggableEls.forEach((d) => d.destroy())
   const data = await tasksStore.getTasks()
   tasks.value = toUiTasks(data)
 }
 
 onMounted(async () => {
-  await updateTasks()
+  await loadTasks()
 })
 
 watch(
   () => tasksStore.tasks,
-  async () => {
-    await updateTasks()
+  async (newTasks) => {
+    draggableEls.forEach((d) => d.destroy())
+    tasks.value = toUiTasks(newTasks)
     window.dispatchEvent(new Event('resize'))
   },
 )
@@ -39,12 +42,16 @@ const setTaskEl = (el: Element | ComponentPublicInstance | null, task: UiTask) =
 
   if (!el) return
 
-  new Draggable(el, {
-    eventData: {
-      title: task.title,
-      duration: DEFAULT_DURATION
-    }
-  })
+  console.log(el)
+
+  draggableEls.push(
+    new Draggable(el, {
+      eventData: {
+        title: task.title,
+        duration: DEFAULT_DURATION
+      }
+    })
+  )
 }
 </script>
 

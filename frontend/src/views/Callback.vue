@@ -23,14 +23,14 @@ onMounted(async () => {
         const data = await res.json();
 
         if (data.code === 'google_auth_error') {
-          router.push('/login/?consent=true')
+          await router.push('/login/?consent=true')
         }
       }
 
       const data = await res.json(); // преобразуем ответ в JSON
       accessTokenStore.setAccessToken(data.access_jwt);
 
-      router.push('/planner/')
+      await router.push('/planner/')
     } catch (err) {
       console.log(err.message)
     } finally {
