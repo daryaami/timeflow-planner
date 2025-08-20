@@ -238,7 +238,7 @@ class CreateEventFromTaskApi(APIView):
         validated = serializer.validated_data
 
         task = get_object_or_404(Task, id=validated['task_id'], user=request.user)
-        user_calendar = get_object_or_404(UserCalendar, calendar_id=validated['calendar_id'], user=request.user)
+        user_calendar = get_object_or_404(UserCalendar, id=validated['calendar_id'], user=request.user)
 
         event_data = {
             "summary": task.title,
@@ -261,7 +261,7 @@ class CreateEventFromTaskApi(APIView):
 
         try:
             timelog = TimeLog.objects.create(
-                user=request.user,
+                # user=request.user,
                 task=task,
                 start_time=validated["start"],
                 end_time=validated["end"],

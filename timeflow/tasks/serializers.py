@@ -30,6 +30,7 @@ class TaskSerializer(serializers.ModelSerializer):
         queryset=UserCalendar.objects.all(),
         required=False
     )
+    title = serializers.CharField(max_length=255, required=False)
 
     class Meta:
         model = Task
