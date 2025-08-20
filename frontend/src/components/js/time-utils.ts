@@ -42,5 +42,11 @@ const getCurrentWeekMonday = (date: Date): Date => {
   return monday;
 }
 
+const addMinutes = (date: Date, minutes: number): Date => {
+  const copy = new Date(date) // чтобы не мутировать оригинал
+  copy.setMinutes(copy.getMinutes() + minutes)
+  return copy
+}
 
-export { getStartOfMonth, getEndOfMonth, getMonthStartDates, formatDate, getTomorrow, getCurrentWeekMonday  };
+
+export { getStartOfMonth, getEndOfMonth, getMonthStartDates, formatDate, getTomorrow, getCurrentWeekMonday, addMinutes  };

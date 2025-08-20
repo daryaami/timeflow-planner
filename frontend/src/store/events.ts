@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { getMonthStartDates, formatDate } from '@/components/js/time-utils'
+import {getMonthStartDates, formatDate, addMinutes} from '@/components/js/time-utils'
 import { BASE_API_URL } from '@/config'
 import { useAuthStore } from './auth'
 import { ref } from 'vue'
@@ -70,20 +70,14 @@ export const useEventsStore = defineStore('events', () => {
     console.log(eventData)
     if (!task) return
 
-    const addMinutes = (date: Date, minutes: number): Date => {
-      const copy = new Date(date) // чтобы не мутировать оригинал
-      copy.setMinutes(copy.getMinutes() + minutes)
-      return copy
-    }
-
     const data = {
-      summary: task.title,
-      description: task.notes? task.notes : '',
+      task_id: task.id,
       start: eventData.date.toISOString(),
       end: addMinutes(eventData.date, task.duration || 30).toISOString(),
+      calendar_id: task.calendar
     }
 
-    fetch(`${BASE_API_URL}/events/`, {
+    fetch(`${BASE_API_URL}/events/create-from-task/`, {
       method: 'POST',
       credentials: 'include',
       headers: {
