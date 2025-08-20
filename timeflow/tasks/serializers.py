@@ -38,12 +38,14 @@ class TaskSerializer(serializers.ModelSerializer):
             'title',
             'priority',
             'category',
+            'duration',
             'due_date',
             'calendar',
             'completed',
             'created_at',
             'updated_at',
             'time_logs',
+            'notes',
         ]
         read_only_fields = ['created_at', 'updated_at']
 
