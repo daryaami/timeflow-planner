@@ -64,18 +64,3 @@ class TaskSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         validated_data.pop('user', None)
         return super().update(instance, validated_data)
-    
-
-from rest_framework import serializers
-from tasks.models import Task, TimeLog
-
-class EventFromTaskSerializer(serializers.Serializer):
-    task_id = serializers.IntegerField()
-    calendar_id = serializers.IntegerField()
-    start = serializers.DateTimeField()
-    end = serializers.DateTimeField()
-
-    def validate(self, data):
-        if data['end'] <= data['start']:
-            raise serializers.ValidationError("Дата окончания должна быть позже даты начала")
-        return data

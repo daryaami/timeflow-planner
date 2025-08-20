@@ -54,7 +54,6 @@ class GoogleCalendarEventSerializer(serializers.Serializer):
 
 class GoogleCalendarEventCreateSerializer(serializers.Serializer):
     summary = serializers.CharField(required=True)  # название события
-    description = serializers.CharField(required=False, allow_blank=True)
     # start/end принимаем в виде словаря с ключом dateTime или date
     start = serializers.DictField(required=True)
     end = serializers.DictField(required=True)
@@ -81,3 +80,14 @@ class GoogleCalendarEventUpdateSerializer(GoogleCalendarEventCreateSerializer):
 class GoogleCalendarEventDeleteSerializer(serializers.Serializer):
     calendar = serializers.CharField(required=False, default="primary")
     event_id = serializers.CharField(required=True)
+
+class EventFromTaskSerializer(serializers.Serializer):
+    task_id = serializers.IntegerField()
+    calendar_id = serializers.IntegerField()
+    start = serializers.DateTimeField()
+    end = serializers.DateTimeField()
+
+    def validate(self, data):
+        if data['end'] <= data['start']:
+            raise serializers.ValidationError("Дата окончания должна быть позже даты начала")
+        return data

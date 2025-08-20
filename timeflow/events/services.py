@@ -174,7 +174,6 @@ class GoogleCalendarService:
             raise EventNotFoundError(f"Ошибка при удалении события: {str(e)}")
 
 
-
 # Сырой объект события
 # {
 #     "kind": "calendar#event",
