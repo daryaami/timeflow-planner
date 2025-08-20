@@ -27,6 +27,8 @@ const title = ref<string>('')
 const priority = ref<string>('NONE')
 const dueDate = ref(null)
 const calendar = ref<string>('')
+const duration = ref<string>('')
+const notes = ref<string>('')
 
 const tasksStore = useTasksStore()
 
@@ -59,6 +61,8 @@ const submitForm = async () => {
     priority: priority.value.value,
     due_date: dueDate.value,
     calendar: calendar.value.id,
+    duration: duration.value,
+    notes: notes.value
   }
 
   await tasksStore.createTask(data)
@@ -89,11 +93,6 @@ const submitForm = async () => {
       </p>
 
       <p>
-        <label>Schedule</label>
-        <input type="datetime-local">
-      </p>
-
-      <p>
         <label>Add due date</label>
         <VueDatePicker
           v-model="dueDate"
@@ -103,7 +102,7 @@ const submitForm = async () => {
 
       <p>
         <label>Duration</label>
-        <input type="text">
+        <input type="text" v-model="duration">
       </p>
 
       <p v-if="calendars">
@@ -119,7 +118,7 @@ const submitForm = async () => {
       </p>
 
       <p>
-        <textarea placeholder="add notes..."></textarea>
+        <textarea v-model="notes" placeholder="add notes..."></textarea>
       </p>
 
       <button type="submit">Save</button>

@@ -26,8 +26,8 @@ watch(
   () => tasksStore.tasks,
   async () => {
     await updateTasks()
+    window.dispatchEvent(new Event('resize'))
   },
-  { deep: true }
 )
 
 // Draggable
