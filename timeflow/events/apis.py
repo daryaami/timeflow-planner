@@ -270,6 +270,8 @@ class CreateEventFromTaskApi(APIView):
         except Exception as e:
             return Response({"error": f"Не удалось создать timelog: {str(e)}"},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        print(calendar_event)
 
         response_serializer = GoogleCalendarEventSerializer(calendar_event)
     
