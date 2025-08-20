@@ -50,16 +50,22 @@ const setTaskEl = (el: Element | ComponentPublicInstance | null, task: UiTask) =
 
 <template>
   <div class="tasks-wrapper" v-if="tasks && tasks.length">
-    <h2 class="tasks-wrapper__title">Tasks</h2>
-    <ul class="tasks__list">
-      <li
+    <div class="tasks-wrapper__title-wrapper">
+      <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+        <use href="#bulb"></use>
+      </svg>
+      <h2 class="tasks-wrapper__title">Plan now</h2>
+      <span class="tasks-wrapper__counter" v-if="tasksStore.tasks.length">{{ tasksStore.tasks.length }}</span>
+    </div>
+    <div class="tasks__list">
+      <div
           v-for="task in tasks"
           :key="task.id"
           :ref="el => setTaskEl(el, task)"
       >
         <TaskItem :task="task" />
-      </li>
-    </ul>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -68,11 +74,32 @@ const setTaskEl = (el: Element | ComponentPublicInstance | null, task: UiTask) =
 
 .tasks-wrapper {
   min-width: 330px;
-  padding: 22px 20px;
+  padding: 22px 12px;
+  box-shadow: 0 0 18px 0 rgba(0, 0, 0, 0.08);
+  z-index: 10;
+  position: relative;
+
+  &__title-wrapper {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    margin-bottom: 33px;
+    padding-left: 8px;
+
+    & svg {
+      display: block;
+    }
+  }
 
   &__title {
     font: var(--light-20);
-    margin-bottom: 20px;
+    margin: 0;
+  }
+
+  &__counter {
+    font: var(--light-20);
+    display: block;
+    color: var(--text-accent);
   }
 }
 

@@ -55,7 +55,6 @@ const tasksStore = useTasksStore()
 
     @include hover {
       border-color: var(--bg-accent);
-      background: transparent;
     }
 
     &--medium {
