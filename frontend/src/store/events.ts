@@ -64,10 +64,9 @@ export const useEventsStore = defineStore('events', () => {
     return events.value
   }
 
-  const createEvent = (eventData: DropArg) => {
+  const createEvent = async (eventData: DropArg) => {
     const task = taskStore.getTaskById(Number(eventData.draggedEl.dataset.taskId))
 
-    console.log(eventData)
     if (!task) return
 
     const data = {
@@ -77,7 +76,7 @@ export const useEventsStore = defineStore('events', () => {
       calendar_id: task.calendar
     }
 
-    fetch(`${BASE_API_URL}/events/create-from-task/`, {
+    const response = await fetch(`${BASE_API_URL}/events/create-from-task/`, {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -86,6 +85,11 @@ export const useEventsStore = defineStore('events', () => {
       },
       body: JSON.stringify(data)
     })
+
+    if (response.ok) {
+      const event = await response.json()
+      events.value.push(adaptEventToFullCalendar(event))
+    }
   }
 
   return { events, getEvents, createEvent }
