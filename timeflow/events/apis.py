@@ -1,13 +1,16 @@
 # events/api.py
 from datetime import datetime
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+
+from tasks.models import Task, TimeLog
 from .services import GoogleCalendarService
 from core.exceptions import GoogleAuthError, GoogleNetworkError
 from .models import UserCalendar
-from .serializers import GoogleCalendarEventCreateSerializer, GoogleCalendarEventDeleteSerializer, GoogleCalendarEventSerializer, GoogleCalendarEventUpdateSerializer, UserCalendarSerializer
+from .serializers import EventFromTaskSerializer, GoogleCalendarEventCreateSerializer, GoogleCalendarEventDeleteSerializer, GoogleCalendarEventSerializer, GoogleCalendarEventUpdateSerializer, UserCalendarSerializer
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
@@ -207,3 +210,69 @@ class ToggleUserCalendarSelectApi(APIView):
         calendar_service = GoogleCalendarService()
         calendar_service.toggle_calendar_select(request.user, calendar_id)
         return Response({"success": "Календарь успешно переключен"}, status=status.HTTP_200_OK)
+    
+    
+class CreateEventFromTaskApi(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_description="Создать событие и timelog на основе задачи",
+        manual_parameters=[
+            openapi.Parameter('task_id', openapi.IN_QUERY, description="ID задачи", type=openapi.TYPE_INTEGER),
+            openapi.Parameter('calendar_id', openapi.IN_QUERY, description="ID календаря", type=openapi.TYPE_INTEGER),
+            openapi.Parameter('start', openapi.IN_QUERY, description="Дата начала (%Y-%m-%d)", type=openapi.TYPE_STRING),
+            openapi.Parameter('end', openapi.IN_QUERY, description="Дата окончания (%Y-%m-%d)", type=openapi.TYPE_STRING),
+        ],
+        responses={
+            201: GoogleCalendarEventSerializer(many=False),
+            400: openapi.Response('Неверный формат дат или отсутствуют параметры start и end', examples={
+                'application/json': {"error": "Параметры start и end обязательны"}
+            }),
+            404: openapi.Response('Задача не найдена'),
+            500: openapi.Response('Ошибка сервера')
+        }
+    )
+    def post(self, request, *args, **kwargs):
+        serializer = EventFromTaskSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated = serializer.validated_data
+
+        task = get_object_or_404(Task, id=validated['task_id'], user=request.user)
+        user_calendar = get_object_or_404(UserCalendar, calendar_id=validated['calendar_id'], user=request.user)
+
+        event_data = {
+            "summary": task.title,
+            "description": task.notes,
+            "start": {"dateTime": validated["start"].isoformat()},
+            "end": {"dateTime": validated["end"].isoformat()},
+        }
+
+        gcal_service = GoogleCalendarService()
+
+        try:
+            calendar_event = gcal_service.create_event(
+                user=request.user,
+                calendar_id=user_calendar.calendar_id,
+                event_data=event_data
+            )
+        except Exception as e:
+            return Response({"error": f"Не удалось создать событие в Google Calendar: {str(e)}"},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        try:
+            timelog = TimeLog.objects.create(
+                user=request.user,
+                task=task,
+                start_time=validated["start"],
+                end_time=validated["end"],
+                google_event_id=calendar_event["id"]
+            )
+        except Exception as e:
+            return Response({"error": f"Не удалось создать timelog: {str(e)}"},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        response_serializer = GoogleCalendarEventSerializer(calendar_event)
+    
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+
