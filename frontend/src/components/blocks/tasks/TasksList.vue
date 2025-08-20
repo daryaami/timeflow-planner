@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ComponentPublicInstance, ref, watch} from "vue";
+import {ComponentPublicInstance, onUnmounted, ref, watch} from "vue";
 import {useTasksStore} from "@/store/tasks";
 import {onMounted} from "vue";
 import { Draggable } from '@fullcalendar/interaction';
@@ -38,21 +38,24 @@ const DEFAULT_DURATION = '00:30'
 
 const setTaskEl = (el: Element | ComponentPublicInstance | null, task: UiTask) => {
   if (!(el instanceof HTMLElement)) return;
-  task.el = el
+  task.el = el;
 
-  if (!el) return
+  if (!el) return;
 
-  console.log(el)
+  // если уже инициализирован — второй раз не создаём
+  if ((el as any)._draggableInstance) return;
 
-  draggableEls.push(
-    new Draggable(el, {
+  const draggable = new Draggable(el, {
       eventData: {
         title: task.title,
-        duration: DEFAULT_DURATION
+        duration: DEFAULT_DURATION,
       }
-    })
-  )
+  });
+
+  (el as any)._draggableInstance = draggable
+  draggableEls.push(draggable)
 }
+
 </script>
 
 <template>
@@ -69,6 +72,7 @@ const setTaskEl = (el: Element | ComponentPublicInstance | null, task: UiTask) =
           v-for="task in tasks"
           :key="task.id"
           :ref="el => setTaskEl(el, task)"
+          :data-task-id="task.id"
       >
         <TaskItem :task="task" />
       </div>

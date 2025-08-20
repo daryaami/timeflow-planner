@@ -58,8 +58,8 @@ const calendarOptions: CalendarOptions = {
   eventDragStop: () => {
     console.log('drag stop')
   },
-  drop: () => {
-    console.log('drop')
+  drop: (dropInfo) => {
+    eventsStore.createEvent(dropInfo)
   }
 }
 

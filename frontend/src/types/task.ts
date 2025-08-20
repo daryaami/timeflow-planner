@@ -22,6 +22,8 @@ export interface Task {
   updated_at: string;        // readOnly
   time_logs: TimeLog[];      // readOnly
   el: null | HTMLElement;
+  duration?: number;
+  notes?: string | null;
 }
 
 export type WithEl<T> = T & { el: Element | null };
