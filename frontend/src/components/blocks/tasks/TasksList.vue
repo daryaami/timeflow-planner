@@ -48,7 +48,7 @@ const setTaskEl = (el: Element | ComponentPublicInstance | null, task: UiTask) =
   const draggable = new Draggable(el, {
       eventData: {
         title: task.title,
-        duration: DEFAULT_DURATION,
+        duration: task.duration? task.duration * 60000: DEFAULT_DURATION,
       }
   });
 

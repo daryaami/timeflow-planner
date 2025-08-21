@@ -11,7 +11,7 @@ const props = defineProps(['currentDate'])
 const currentMonth = computed(() => {
   if (props.currentDate) {
     const now = props.currentDate;
-    return `${now.toLocaleString('default', { month: 'long' })} ${now.getFullYear()}`;
+    return `${now.toLocaleString('EN-US', { month: 'long' })} ${now.getFullYear()}`;
   } else {
     return ''
   }
