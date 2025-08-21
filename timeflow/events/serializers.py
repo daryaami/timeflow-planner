@@ -25,6 +25,8 @@ class GoogleCalendarEventSerializer(serializers.Serializer):
     # Можно сохранять email организатора как строку (если важен только email)
     organizer_email = serializers.SerializerMethodField()
     calendar = serializers.CharField(required=False)
+    description = serializers.CharField(required=False, allow_blank=True)
+    extendedProperties = serializers.DictField(required=False)
 
     def get_organizer_email(self, obj):
         organizer = obj.get('organizer')
@@ -55,6 +57,7 @@ class GoogleCalendarEventSerializer(serializers.Serializer):
 class GoogleCalendarEventCreateSerializer(serializers.Serializer):
     summary = serializers.CharField(required=True)  # название события
     calendar_id = serializers.IntegerField(required=True)
+    description = serializers.CharField(required=False, allow_blank=True)
 
     # start/end принимаем в виде словаря с ключом dateTime или date
     start = serializers.DictField(required=True)
@@ -77,6 +80,8 @@ class GoogleCalendarEventCreateSerializer(serializers.Serializer):
 class GoogleCalendarEventUpdateSerializer(GoogleCalendarEventCreateSerializer):
     event_id = serializers.CharField(required=True)
     calendar_id = serializers.IntegerField(required=True)
+    extendedProperties = serializers.DictField(required=False)
+    summary = serializers.CharField(required=False)
 
 class GoogleCalendarEventDeleteSerializer(serializers.Serializer):
     event_id = serializers.CharField(required=True)
@@ -92,3 +97,18 @@ class EventFromTaskSerializer(serializers.Serializer):
         if data['end'] <= data['start']:
             raise serializers.ValidationError("Дата окончания должна быть позже даты начала")
         return data
+
+    
+# class EventFromTaskUpdateSerializer(EventFromTaskSerializer):
+#     event_id = serializers.IntegerField(required=True)
+#     task_id = serializers.IntegerField(required=True)
+#     timelog_id = serializers.IntegerField(required=True)
+#     calendar_id = serializers.IntegerField(required=True)
+    
+#     summary = serializers.CharField(required=False)
+#     start = serializers.DateTimeField(required=False)
+#     end = serializers.DateTimeField(required=False)
+
+
+
+
