@@ -29,7 +29,8 @@ class CategoryViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if not user.is_authenticated:
-            return Category.objects.none()
+            # return Category.objects.none()
+            return Category.objects.filter(is_default=True)
         return Category.objects.filter(
             Q(user=self.request.user) | Q(is_default=True)
         )
