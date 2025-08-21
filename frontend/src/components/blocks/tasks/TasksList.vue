@@ -15,7 +15,6 @@ const toUiTasks = (items: Task[]): UiTask[] =>
   items.map((t) => ({ ...t, el: null }));
 
 const loadTasks = async () => {
-  draggableEls.forEach((d) => d.destroy())
   const data = await tasksStore.getTasks()
   tasks.value = toUiTasks(data)
 }
@@ -27,7 +26,6 @@ onMounted(async () => {
 watch(
   () => tasksStore.tasks,
   async (newTasks) => {
-    draggableEls.forEach((d) => d.destroy())
     tasks.value = toUiTasks(newTasks)
     window.dispatchEvent(new Event('resize'))
   },
