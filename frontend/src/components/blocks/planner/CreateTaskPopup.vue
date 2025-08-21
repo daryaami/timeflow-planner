@@ -6,6 +6,7 @@ import {useTasksStore} from "@/store/tasks";
 import MultiSelect from 'vue-multiselect'
 import VueDatePicker from "@vuepic/vue-datepicker";
 import {useCategoriesStore} from "@/store/categories";
+import {Category} from "@/types/category";
 
 const popup = ref(null)
 
@@ -27,16 +28,21 @@ const openPopup = async () => {
 
   if (!categories.value) {
     categories.value = await categoriesStore.getCategories()
+
+    category.value = categories.value?.find(c => c.name === 'Personal');
   }
+
+  priority.value = PRIORITY_OPTIONS.find(p => p.value === 'NONE')
 }
 
 
 const title = ref<string>('')
-const priority = ref<string>('NONE')
+const priority = ref<string>('')
 const dueDate = ref(null)
 const calendar = ref<string>('')
 const duration = ref<string>('')
 const notes = ref<string>('')
+const category = ref<Category>('')
 
 const tasksStore = useTasksStore()
 
@@ -70,7 +76,8 @@ const submitForm = async () => {
     due_date: dueDate.value,
     calendar: calendar.value.id,
     duration: duration.value,
-    notes: notes.value
+    notes: notes.value,
+    category: category.value.id
   }
 
   await tasksStore.createTask(data)
@@ -123,6 +130,19 @@ const submitForm = async () => {
                      placeholder="Select calendar"
                      :showLabels="false"
         ></MultiSelect>
+      </p>
+
+      <p v-if="categories">
+        <MultiSelect v-model="category"
+          :options="categories"
+          track-by="id"
+          label="name"
+          :allow-empty="false"
+          :clearOnSelect="false"
+          placeholder="Select category"
+          :showLabels="false"
+        >
+        </MultiSelect>
       </p>
 
       <p>
