@@ -5,11 +5,15 @@ import {useTasksStore} from "@/store/tasks";
 
 import MultiSelect from 'vue-multiselect'
 import VueDatePicker from "@vuepic/vue-datepicker";
+import {useCategoriesStore} from "@/store/categories";
 
 const popup = ref(null)
 
 const calendarsStore = useCalendarsStore()
 const calendars = ref(null)
+
+const categoriesStore = useCategoriesStore()
+const categories = ref(null)
 
 
 const openPopup = async () => {
@@ -19,6 +23,10 @@ const openPopup = async () => {
     calendars.value = await calendarsStore.getCalendars()
 
     calendar.value = calendars.value?.find(c => c.primary);
+  }
+
+  if (!categories.value) {
+    categories.value = await categoriesStore.getCategories()
   }
 }
 
