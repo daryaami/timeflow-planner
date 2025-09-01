@@ -6,3 +6,4 @@ k8s/
 **/.env
 **/nginx.conf
 compose/
+**/logs/

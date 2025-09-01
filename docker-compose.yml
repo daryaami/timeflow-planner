@@ -1,0 +1,38 @@
+# # docker-compose.yml
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./timeflow
+    container_name: timeflowapi-backend
+    expose:
+      - "8000"
+    networks:
+      - appnet
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: timeflowapi-frontend
+    networks:
+      - appnet
+    # НЕ пробрасываем порты наружу — nginx будет единственной точкой входа
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: timeflowapi-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - appnet
+
+networks:
+  appnet:
+    driver: bridge
