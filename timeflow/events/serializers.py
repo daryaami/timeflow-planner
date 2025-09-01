@@ -26,6 +26,7 @@ class GoogleCalendarEventSerializer(serializers.Serializer):
     organizer_email = serializers.SerializerMethodField()
     calendar = serializers.CharField(required=False)
     description = serializers.CharField(required=False, allow_blank=True)
+    
     extendedProperties = serializers.DictField(required=False)
 
     def get_organizer_email(self, obj):

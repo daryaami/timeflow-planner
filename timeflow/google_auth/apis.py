@@ -1,4 +1,5 @@
 import calendar
+from django.shortcuts import redirect
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -60,6 +61,7 @@ class GoogleLoginRedirectApi(PublicApi):
         except Exception as e:
             raise GoogleAuthError(f"Ошибка при запросе авторизации: {str(e)}")
 
+from django.http import HttpResponseRedirect
 
 class GoogleLoginApi(PublicApi):
     class InputSerializer(serializers.Serializer):
@@ -142,6 +144,8 @@ class GoogleLoginApi(PublicApi):
             }
 
             response = Response(result, status=status.HTTP_200_OK)
+
+            # response = HttpResponseRedirect('http://frontend:3000/', result)
             
             expires = datetime.datetime.now(datetime.timezone.utc) + settings.REFRESH_TOKEN_LIFETIME
             
@@ -157,17 +161,20 @@ class GoogleLoginApi(PublicApi):
                 # domain='localhost'
             )
 
+            
+            # -----------------------
             return response
+            # return redirect('http://frontend:3000/')
         
         except InvalidGoogleAccessTokenError as e:
             logger.exception("InvalidGoogleAccessTokenError при авторизации: %s", e)
-            raise GoogleRefreshTokenError(detail=str(e))
-        except GoogleRefreshTokenError as e:
+            raise InvalidGoogleAccessTokenError(detail=str(e))
+        except GoogleRefreshTokenError as e: 
             logger.exception("GoogleRefreshTokenError при авторизации: %s", e)
-            raise e
+            raise GoogleRefreshTokenError(detail=str(e))
         except GoogleNetworkError as e:
             logger.exception("GoogleNetworkError при авторизации: %s", e)
-            raise e
+            raise GoogleNetworkError(detail=str(e))
         except Exception as e:
             logger.exception("Неожиданная ошибка при авторизации через Google: %s", e)
             raise GoogleAuthError(detail=str(e))

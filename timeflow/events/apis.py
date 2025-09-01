@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from tasks.models import Task, TimeLog
 from .services import GoogleCalendarService, add_event_extended_properties
-from core.exceptions import GoogleAuthError, GoogleNetworkError
+from core.exceptions import GoogleAuthError, GoogleNetworkError, GoogleRefreshTokenError
 from .models import UserCalendar
 from .serializers import EventFromTaskSerializer, GoogleCalendarEventCreateSerializer, GoogleCalendarEventDeleteSerializer, GoogleCalendarEventSerializer, GoogleCalendarEventUpdateSerializer, UserCalendarSerializer
 from drf_yasg import openapi
@@ -51,10 +51,14 @@ class UserCalendarEventsApi(APIView):
         try:
             events = calendar_service.get_all_events(request.user, time_min, time_max)
             return Response(events, status=status.HTTP_200_OK)
-        except GoogleNetworkError as e:
-            raise e
+        # except GoogleRefreshTokenError as e:
+        #     raise e
+        # except GoogleNetworkError as e:
+        #     raise e
+        # except Exception as e:
+        #     raise GoogleAuthError(detail=str(e))
         except Exception as e:
-            raise GoogleAuthError(detail=str(e))
+            raise e
         
     @swagger_auto_schema(
         operation_description="Создать новое событие в календаре пользователя",

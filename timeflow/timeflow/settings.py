@@ -64,6 +64,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:80",
     "http://127.0.0.1:8000",
     "http://timeflow.local",
+    "http://localhost",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -71,6 +72,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://127.0.0.1:80",
     "http://127.0.0.1:8000",
+    "http://localhost",
 ]
 
 # CACHES = {
@@ -261,4 +263,5 @@ GOOGLE_OAUTH2_CLIENT_ID = os.getenv('GOOGLE_OAUTH2_CLIENT_ID')
 GOOGLE_OAUTH2_CLIENT_SECRET = os.getenv('GOOGLE_OAUTH2_CLIENT_SECRET')
 GOOGLE_OAUTH2_PROJECT_ID = os.getenv('GOOGLE_OAUTH2_PROJECT_ID')
 GOOGLE_API_URI = "http://localhost:5173/auth/google/callback/"
+# GOOGLE_API_URI = "http://frontend:3000/auth/google/callback/"
 # GOOGLE_API_URI = "https://timeflow.nowheiscursed.space/auth/google/callback/"
