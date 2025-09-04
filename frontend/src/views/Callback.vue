@@ -5,6 +5,9 @@ import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/store/auth.ts';
 import { useRouter } from 'vue-router';
 
+import {BASE_API_URL} from "../config.ts";
+
+
 const accessTokenStore = useAuthStore();
 const router = useRouter();
 
@@ -17,7 +20,7 @@ onMounted(async () => {
 
   if (code && state) {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/auth/google/callback?code=${code}&state=${state}`);
+      const res = await fetch(`${BASE_API_URL}/auth/google/callback?code=${code}&state=${state}`);
 
       if (!res.ok) {
         const data = await res.json();

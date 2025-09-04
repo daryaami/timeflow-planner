@@ -76,7 +76,7 @@ export const useEventsStore = defineStore('events', () => {
       calendar_id: task.calendar
     }
 
-    const response = await fetch(`${BASE_API_URL}/events/create-from-task/`, {
+    const response = await fetch(`${BASE_API_URL}/events/from-task/`, {
       method: 'POST',
       credentials: 'include',
       headers: {
