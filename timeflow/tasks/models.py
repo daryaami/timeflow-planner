@@ -36,6 +36,7 @@ class Task(models.Model):
     title = models.CharField(max_length=255)
     priority = models.CharField(max_length=10, choices=Priority.choices, default=Priority.MEDIUM)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='tasks')
+    # TODO: поменять due date на просто дату
     due_date = models.DateTimeField(null=True, blank=True)
     duration = models.SmallIntegerField(null=True, blank=True, default=DEFAULT_DURATION)
     calendar = models.ForeignKey(UserCalendar, on_delete=models.CASCADE, related_name='tasks')

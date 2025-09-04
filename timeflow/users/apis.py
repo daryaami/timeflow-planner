@@ -1,15 +1,18 @@
 import logging
+from django.conf import settings
+import jwt
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.exceptions import AuthenticationFailed
 
-from core.exceptions import AccessJWTError, RefreshJWTError
+from core.exceptions import AccessJWTError, GoogleRefreshTokenError, RefreshJWTError, UserNotFoundError
+from users.models import CustomUser
 from users.services import AuthService
 from .serializers import UserSerializer
 
@@ -98,7 +101,6 @@ class ProfileView(APIView):
         logger.info("User %s requested their profile.", request.user)
         user = UserSerializer(request.user)
         return Response(user.data, status=status.HTTP_200_OK)
-    
 
 class TokenPingView(APIView):
     '''Проверяет работоспособность access_jwt и refresh_jwt токенов'''
@@ -109,7 +111,8 @@ class TokenPingView(APIView):
         operation_description="Проверка работоспособности токена",
         responses={200: openapi.Response(description="Токен работоспособен"),
                    401: openapi.Response(description="Access JWT токен не найден или истек"),
-                   403: openapi.Response(description="Refresh JWT токен не найден или истек")}
+                   403: openapi.Response(description="Refresh JWT токен не найден или истек"),
+                   404: openapi.Response(description="Пользователь не найден")}
     )
     def get(self, request):
         refresh_jwt = request.COOKIES.get('refresh_jwt')
@@ -120,11 +123,27 @@ class TokenPingView(APIView):
         try:
             AuthService.verify_refresh_token(refresh_jwt)
         except AuthenticationFailed:
-            print("Refresh token is invalid or expired.")
-            return RefreshJWTError()
+            raise RefreshJWTError()
+        
+        access_token = request.headers.get("Authorization")
+        if not access_token or not access_token.startswith("JWT "):
+            raise AccessJWTError()
+        token = access_token.split(" ")[1]
 
-        user = request.user
-        if not user or not user.is_authenticated:
-            return AccessJWTError()
-
+        try:
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        except jwt.ExpiredSignatureError:
+            raise AccessJWTError()
+        except jwt.InvalidTokenError:
+            raise AccessJWTError()
+        
+        user_id = payload.get("user_id")
+        if not user_id:
+            raise AccessJWTError()
+        
+        try:
+            user = CustomUser.objects.get(pk=user_id, is_active=True)
+        except CustomUser.DoesNotExist:
+            raise UserNotFoundError()
+            
         return Response({"detail": "Tokens are valid."}, status=status.HTTP_200_OK)

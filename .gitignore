@@ -3,7 +3,8 @@
 test.py
 k8s/
 **/Dockerfile
-**/.env
+**/.env.*
 **/nginx.conf
 compose/
 **/logs/
+venv/

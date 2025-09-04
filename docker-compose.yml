@@ -6,6 +6,10 @@ services:
     build:
       context: ./timeflow
     container_name: timeflowapi-backend
+    env_file:
+      - ./timeflow/.env.production
+    environment:
+      - DJANGO_ENV=production
     expose:
       - "8000"
     networks:

@@ -16,10 +16,16 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+DJANGO_ENV = os.getenv("DJANGO_ENV", "development")  # default локально dev
+
+if DJANGO_ENV == "production":
+    load_dotenv(BASE_DIR / ".env.production")
+else:
+    load_dotenv(BASE_DIR / ".env.development") 
 
 
 # Quick-start development settings - unsuitable for production
@@ -29,10 +35,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-jot6xd()f$&oaz%29d_58sw$f6o+yg+wu%2g@pq&jz1&qi5*00'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+if DJANGO_ENV == "production":
+    DEBUG = False
+else:
+    DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -243,25 +251,28 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         "rest_framework.authentication.SessionAuthentication",
     ),
-    'EXCEPTION_HANDLER': 'core.exceptions.custom_exception_handler',
+    # 'EXCEPTION_HANDLER': 'core.exceptions.custom_exception_handler',
+    # Кастомный обработчик исключений
+    "EXCEPTION_HANDLER": "core.drf_exception_handler.custom_exception_handler",
 }
 
-REFRESH_TOKEN_LIFETIME = timedelta(days=7)
+JWT_REFRESH_TOKEN_LIFETIME = timedelta(days=7)
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
-    'REFRESH_TOKEN_LIFETIME': REFRESH_TOKEN_LIFETIME,
+    'REFRESH_TOKEN_LIFETIME': JWT_REFRESH_TOKEN_LIFETIME,
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'SIGNING_KEY': SECRET_KEY,
     'AUTH_HEADER_TYPES': ('JWT',),
 }
 
-BASE_BACKEND_URL = os.getenv("BASE_BACKEND_URL", "http://localhost:8000")
+# BASE_BACKEND_URL = os.getenv("BASE_BACKEND_URL", "http://localhost:8000")
 
 GOOGLE_OAUTH2_CLIENT_ID = os.getenv('GOOGLE_OAUTH2_CLIENT_ID')
 GOOGLE_OAUTH2_CLIENT_SECRET = os.getenv('GOOGLE_OAUTH2_CLIENT_SECRET')
 GOOGLE_OAUTH2_PROJECT_ID = os.getenv('GOOGLE_OAUTH2_PROJECT_ID')
-GOOGLE_API_URI = "http://localhost:5173/auth/google/callback/"
-# GOOGLE_API_URI = "http://frontend:3000/auth/google/callback/"
+
+GOOGLE_API_URI = os.getenv("GOOGLE_API_URI")
+
 # GOOGLE_API_URI = "https://timeflow.nowheiscursed.space/auth/google/callback/"

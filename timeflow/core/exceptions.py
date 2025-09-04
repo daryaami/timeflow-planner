@@ -3,16 +3,16 @@ from rest_framework import status
 from rest_framework.views import exception_handler
 
 
-def custom_exception_handler(exc, context):
-    response = exception_handler(exc, context)
+# def custom_exception_handler(exc, context):
+#     response = exception_handler(exc, context)
 
-    if response is not None and isinstance(exc, APIException):
-        response.data = {
-            "detail": exc.detail,
-            "code": exc.get_codes()
-        }
+#     if response is not None and isinstance(exc, APIException):
+#         response.data = {
+#             "detail": exc.detail,
+#             "code": exc.get_codes()
+#         }
 
-    return response
+#     return response
 
 # 
 # GOOGLE EXCEPTIONS
@@ -85,12 +85,12 @@ class GoogleCalendarError(APIException):
     default_code = "google_calendar_error"
 
 class CalendarSyncError(APIException):
-    status_code = 500  # HTTP 500 Internal Server Error, ошибка на сервере
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR  # HTTP 500 Internal Server Error, ошибка на сервере
     default_detail = 'Ошибка синхронизации календаря пользователя.'
     default_code = 'calendar_sync_error'
 
 class CalendarCreationError(APIException):
-    status_code = 400
+    status_code = status.HTTP_400_BAD_REQUEST
     default_detail = 'Ошибка при создании календаря пользователя.'
     default_code = 'calendar_creation_error'
 
@@ -103,3 +103,17 @@ class CalendarNotFoundError(APIException):
     status_code = status.HTTP_404_NOT_FOUND
     default_detail = "Календарь не найден."
     default_code = "calendar_not_found"
+
+
+# 
+# SERVER EXCEPTIONS
+#
+class ServerError(APIException):
+    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    default_detail = "Внутренняя ошибка сервера."
+    default_code = "server_error"
+
+class UserNotFoundError(APIException):
+    status_code = status.HTTP_404_NOT_FOUND
+    default_detail = "Пользователь не найден."
+    default_code = "user_not_found"

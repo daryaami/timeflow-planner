@@ -1,3 +1,4 @@
+import os
 import jwt
 import requests
 import logging
@@ -15,6 +16,7 @@ from google.auth.exceptions import RefreshError
 
 from core.exceptions import GoogleRefreshTokenError, GoogleTokenExchangeError, GoogleNetworkError, ObtainGoogleAccessTokenError
 from google_auth.models import GoogleRefreshToken
+from users.models import CustomUser
 
 logger = logging.getLogger(__name__)
 
@@ -43,8 +45,9 @@ class GoogleAccessTokens:
     expires_in: int | None = 3600
 
     def decode_id_token(self) -> Dict[str, str]:
+        if not self.id_token:
+            return {}
         return jwt.decode(jwt=self.id_token, options={"verify_signature": False})
-
 
 class GoogleRawLoginFlowService:
     API_URI = settings.GOOGLE_API_URI
@@ -125,14 +128,18 @@ class GoogleRawLoginFlowService:
                                            refresh_token=tokens.get("refresh_token", None), 
                                            expires_in=tokens.get("expires_in", None))
 
-        store_user_token(user_id=google_tokens.decode_id_token()["sub"], token=google_tokens.access_token, expires_in=google_tokens.expires_in)
+        user_id = google_tokens.decode_id_token().get("sub", None)
+        if not user_id:
+            raise ObtainGoogleAccessTokenError()
+        
+        store_user_token(user_id=user_id, token=google_tokens.access_token, expires_in=google_tokens.expires_in)
 
         return google_tokens
 
     def get_user_info(self, *, google_tokens: GoogleAccessTokens) -> Dict[str, Any]:
         access_token = google_tokens.access_token
         # Reference: https://developers.google.com/identity/protocols/oauth2/web-server#callinganapi
-        response = requests.get(self.GOOGLE_USER_INFO_URL, params={"access_token": access_token})
+        response = requests.get(self.GOOGLE_USER_INFO_URL, headers={"Authorization": f"Bearer {access_token}"}) # , params={"access_token": access_token})
 
         if not response.ok:
             raise GoogleNetworkError("Failed to obtain user info from Google.")
@@ -183,13 +190,26 @@ class GoogleRawLoginFlowService:
         return credentials
 
 
-def store_user_token(user_id: str, token: str, expires_in: int = 3600):
+def set_refresh_cookie(response, refresh_token, max_age=settings.JWT_REFRESH_TOKEN_LIFETIME):
+    response.set_cookie(
+        key="refresh_jwt",
+        value=refresh_token,
+        httponly=True,
+        secure=False,          # для локалки без HTTPS
+        samesite='Lax',
+        max_age=int(max_age.total_seconds()),
+    )
+    return response
+
+def store_user_token(user_id: str, token: str, expires_in: int | None = 3600):
     """
     Сохраняет access_token для пользователя с указанным user_id.
     expires_in - время жизни токена в секундах (по умолчанию 1 час).
     """
+    expires = int(expires_in or 3600)
+    timeout = max(expires - 60, 60)
     key = f"google_access_token_{user_id}"
-    cache.set(key, token, timeout=expires_in - 60)  # Сохранение с запасом 1 минута
+    cache.set(key, token, timeout=timeout)
 
 
 def get_user_token(user_id: str):
@@ -200,6 +220,7 @@ def get_user_token(user_id: str):
     token = cache.get(key)
     return token
 
+
 def get_user_credentials(user_id: str) -> Credentials:
     """
     Получает credentials для пользователя по user_id.
@@ -209,6 +230,9 @@ def get_user_credentials(user_id: str) -> Credentials:
         token = get_user_token(user_id)
         if token:
             info['token'] = token
+            print('Access токен находится в кэше.')
+        else:
+            print('Access токен в кэше.')
         g_refresh_token = GoogleRefreshToken.objects.get(user__google_id=user_id)
     
     except GoogleRefreshToken.DoesNotExist:
@@ -222,9 +246,21 @@ def get_user_credentials(user_id: str) -> Credentials:
         info=info
     )
 
+    # creds = Credentials(
+    #     token=token,
+    #     refresh_token=g_refresh_token.refresh_token,
+    #     client_id=settings.GOOGLE_OAUTH2_CLIENT_ID,
+    #     client_secret=settings.GOOGLE_OAUTH2_CLIENT_SECRET,
+    #     # scopes=self.SCOPES  # если нужно
+    # )
+
     if creds.expired and creds.refresh_token:
         try:
             creds.refresh(Request())
+
+            if creds.refresh_token != g_refresh_token.refresh_token:
+                save_google_refresh_token(user=g_refresh_token.user, refresh_token=creds.refresh_token)
+
         except RefreshError:
             raise GoogleRefreshTokenError()
 
@@ -233,7 +269,7 @@ def get_user_credentials(user_id: str) -> Credentials:
     return creds
 
 
-def save_google_refresh_token(user, refresh_token):
+def save_google_refresh_token(user: CustomUser, refresh_token):
     GoogleRefreshToken.objects.update_or_create(
         user=user, 
         defaults={"refresh_token": refresh_token}
