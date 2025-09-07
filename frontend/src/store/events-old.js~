@@ -1,9 +1,9 @@
 import { defineStore } from "pinia";
 import { ref } from 'vue';
 import { getCurrentWeekMonday, isSameDay } from '@/components/js/time-utils';
-import { BASE_API_URL } from '@/config';
+import { BASE_API_URL } from '@/config.js';
 
-import { useAuthStore } from '@/store/auth.js';
+import { useAuthStore } from '@/store/auth.ts';
 
 export const useEventsStore = defineStore("events", () => {
   const events = ref([]);
