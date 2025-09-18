@@ -4,9 +4,9 @@ import {useCalendarsStore} from "@/store/calendars";
 import {useTasksStore} from "@/store/tasks";
 
 import MultiSelect from 'vue-multiselect'
-import VueDatePicker from "@vuepic/vue-datepicker";
 import {useCategoriesStore} from "@/store/categories";
 import {Category} from "@/types/category";
+import CustomDatePicker from "@/components/blocks/form/CustomDatePicker.vue";
 
 const popup = ref(null)
 
@@ -109,10 +109,10 @@ const submitForm = async () => {
 
       <p>
         <label>Add due date</label>
-        <VueDatePicker
-          v-model="dueDate"
-          @update:model-value="val => dueDate = val ? val.toISOString() : null"
-        />
+          <CustomDatePicker v-model="dueDate"
+              @update:model-value="val => dueDate = val ? val.toISOString() : null"
+              placeholder="Due"
+          />
       </p>
 
       <p>

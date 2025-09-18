@@ -29,6 +29,7 @@ export const useAuthStore = defineStore('access-token', () => {
       const data = await response.json()
       setAccessToken(data.access_jwt)
     } else {
+      await router.push('/login/')
       throw new Error('Failed to refresh access token')
     }
   }
@@ -37,6 +38,7 @@ export const useAuthStore = defineStore('access-token', () => {
     let response = await fetchFn()
 
     if (response.status === 401) {
+
       try {
         await refreshAccessToken()
         response = await fetchFn()
@@ -47,8 +49,15 @@ export const useAuthStore = defineStore('access-token', () => {
     }
 
     if (response.status === 403) {
-      await router.push('/login/?consent=true')
-      throw new Error('Redirected to login due to 403')
+      const data = await response.json();
+
+      if (data.code === 'refresh_jwt_error') {
+        await router.push('/login/')
+        throw new Error('Redirected to login due to refresh JWT error')
+      } else {
+        await router.push('/login/?consent=true')
+        throw new Error(`Redirected to login due to ${data.code}`)
+      }
     }
 
     return response
@@ -56,10 +65,10 @@ export const useAuthStore = defineStore('access-token', () => {
 
   const checkTokens = async () => {
     const token = getAccessToken()
-    const router = useRouter()
 
+    console.log(token)
     if (token) {
-      const response = await fetch(`${BASE_API_URL}/users/ping/`, {
+      const fetchFn = () => fetch(`${BASE_API_URL}/users/ping/`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -67,20 +76,10 @@ export const useAuthStore = defineStore('access-token', () => {
         }
       })
 
-      if (response.status === 200) {
-        return true
-      } else if (response.status === 401) {
-        await refreshAccessToken()
-      } else if (response.status === 403) {
-        await router.push('/login/')
-        return false
-      }
+      const response = await ensureAuthorizedRequest(fetchFn)
+      return response.status === 200
     } else {
-      try {
-        await refreshAccessToken()
-      } catch (error) {
-        // await router.push('/login/?consent=true')
-      }
+      await refreshAccessToken()
     }
 
     return true

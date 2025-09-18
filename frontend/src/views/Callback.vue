@@ -25,7 +25,7 @@ onMounted(async () => {
       if (!res.ok) {
         const data = await res.json();
 
-        if (data.code === 'google_auth_error') {
+        if (data.code === 'google_refresh_token_error') {
           await router.push('/login/?consent=true')
         }
       }
