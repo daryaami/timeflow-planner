@@ -36,7 +36,7 @@ const days = computed(() => {
 })
 
 const currentMonth = computed(() => {
-  return `${currentCalendarDate.value.toLocaleString('default', { month: 'long' })} ${currentCalendarDate.value.getFullYear()}`;
+  return `${currentCalendarDate.value.toLocaleString('en-US', { month: 'long' })} ${currentCalendarDate.value.getFullYear()}`;
 })
 
 const nextMonthHandler = () => {

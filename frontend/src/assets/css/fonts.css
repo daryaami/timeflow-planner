@@ -1,5 +1,19 @@
+@font-face {
+  font-family: "Geologica Cursive";
+  font-style: normal;
+  font-weight: 400;
+  src: url("@/assets/fonts/Geologica-Cursive-Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Geologica Cursive";
+  font-style: normal;
+  font-weight: 200;
+  src: url("@/assets/fonts/Geologica-Cursive-ExtraLight.woff2") format("woff2");
+}
+
 :root {
-  --main-font: "Geologica", sans-serif;
+  --main-font: "Geologica Cursive", "Geologica", sans-serif;
 
   --light-24: 200 24px / 1 var(--main-font);
   --light-20: 200 20px / 1 var(--main-font);
