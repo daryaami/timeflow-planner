@@ -132,7 +132,7 @@ class GoogleCalendarService:
                     event['calendar'] = calendar.calendar_id
                     serializer = GoogleCalendarEventSerializer(data=event)
                     if serializer.is_valid():
-                        events_list.append(serializer.validated_data)
+                        events_list.append(serializer.data)
                     else:
                         logger.error("Failed to serialize event: %s", event, serializer.errors)
 
