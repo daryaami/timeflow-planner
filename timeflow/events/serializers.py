@@ -44,13 +44,24 @@ class GoogleCalendarEventSerializer(serializers.Serializer):
         representation = super().to_representation(instance)
         
         # Преобразуем поля start и end: выбираем dateTime, если оно есть, иначе date.
-        for time_field in ('start', 'end'):
-            time_data = instance.get(time_field, {})
-            if isinstance(time_data, dict):
-                # Приоритет: dateTime -> date
-                representation[time_field] = time_data.get('dateTime') or time_data.get('date')
-            else:
-                representation[time_field] = time_data
+        # for time_field in ('start', 'end'):
+        #     time_data = instance.get(time_field, {})
+        #     if isinstance(time_data, dict):
+        #         # Приоритет: dateTime -> date
+        #         representation[time_field] = time_data.get('dateTime') or time_data.get('date')
+        #     else:
+        #         representation[time_field] = time_data
+
+        # Выбираем цвет
+        calendar_id = instance.get("calendar") or instance.get("calendar_id")
+        if calendar_id:
+            try:
+                calendar = UserCalendar.objects.get(calendar_id=calendar_id)
+                representation["color"] = calendar.background_color
+            except UserCalendar.DoesNotExist:
+                representation["color"] = None
+        else:
+            representation["color"] = None
 
         return representation
     
