@@ -27,6 +27,9 @@ onMounted(async () => {
 .profile-dropdown {
   &__img {
     border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: block;
   }
 }
 </style>

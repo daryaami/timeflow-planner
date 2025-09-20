@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import RoundTextBtn from "@/components/blocks/buttons/round-text-btn.vue";
+import RoundTextBtn from "@/components/ui-kit/RoundTextBtn.vue";
 import {computed} from "vue";
-import IconBtn from "@/components/blocks/buttons/icon-btn.vue";
+import IconBtn from "@/components/ui-kit/IconBtn.vue";
 import ProfileDropdown from "@/components/blocks/profile-dropdown.vue";
 
 

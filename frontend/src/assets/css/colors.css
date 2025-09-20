@@ -1,15 +1,25 @@
 :root {
+  --text-primary: #232634;
+  --text-primary-hover: #3b61e8;
+  --text-primary-disabled: #858893;
+
+  --text-primary-muted: #363945;
+
+  --icon-primary: #232634;
+  --icon-primary-hover: #3b61e8;
+
+
   --bg-auth-google: #abfff0;
   --bg-tertiary: #482255;
   --text-secondary: #fcfcfc;
   --bg-primary: var(--text-secondary);
-  --text-primary: #232634;
+
   --text-secondary-muted: #d9d9d9;
-  --text-primary-muted: #363945;
-  --icon-primary: var(--text-primary);
+
+
+
   --icon-hover: #00d0c5;
   --bg-accent: #3b61e8;
-  --text-primary-disabled: #858893;
 
   --bg-primary-hover: #e8e8e8;
   --bg-accent-hover: #2d54dc;

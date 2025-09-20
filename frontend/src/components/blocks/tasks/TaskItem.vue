@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {Task} from "@/types/task";
-import IconBtn from "@/components/blocks/buttons/icon-btn.vue";
+import IconBtn from "@/components/ui-kit/IconBtn.vue";
 import {useTasksStore} from "@/store/tasks";
 import {computed} from "vue";
 
