@@ -18,7 +18,7 @@
   --light-24: 200 24px / 1 var(--main-font);
   --light-20: 200 20px / 1 var(--main-font);
   --light-16: 200 16px / 1 var(--main-font);
-  --light-14: 200 14px / 1 var(--main-font);
+  --light-14: 200 14px / 16px var(--main-font);
   --light-11: 200 11px / 1 var(--main-font);
   --light-10: 200 10px / 1 var(--main-font);
 

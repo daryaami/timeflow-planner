@@ -58,7 +58,7 @@ const tasksStore = useTasksStore()
     <IconBtn
       @click.prevent="tasksStore.deleteTask(task.id)"
       class="task-item__delete"
-      icon="#delete"
+      icon="delete"
       size="xs"
     />
   </div>

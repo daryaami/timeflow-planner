@@ -2,7 +2,7 @@
 import RoundTextBtn from "@/components/ui-kit/RoundTextBtn.vue";
 import {computed} from "vue";
 import IconBtn from "@/components/ui-kit/IconBtn.vue";
-import ProfileDropdown from "@/components/blocks/profile-dropdown.vue";
+import ProfileDropdown from "@/components/blocks/ProfileDropdown.vue";
 
 
 const emit = defineEmits(['nextWeek', 'prevWeek', 'today'])
@@ -27,12 +27,12 @@ const currentMonth = computed(() => {
       />
       <div class="planner-header__chevrons">
         <IconBtn
-          icon="#chevron-left"
+          icon="chevron-left"
           size="s"
           @click="emit('prevWeek')"
         />
         <IconBtn
-          icon="#chevron-right"
+          icon="chevron-right"
           size="s"
           @click="emit('nextWeek')"
         />
@@ -43,10 +43,10 @@ const currentMonth = computed(() => {
     <div class="planner-header__right-col">
       <RoundTextBtn
         text="Week"
-        icon="#chevron-down"
+        icon="chevron-down"
       />
       <IconBtn class="planner-header__settings"
-        icon="#settings"
+        icon="settings"
         size="s"
       />
 

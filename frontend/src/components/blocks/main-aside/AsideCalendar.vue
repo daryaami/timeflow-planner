@@ -56,13 +56,13 @@ const prevMonthHandler = () => {
         <div class="aside-calendar__buttons-wrapper">
           <IconBtn
             @click="prevMonthHandler"
-            icon="#chevron-left"
+            icon="chevron-left"
             size="xs"
           />
 
           <IconBtn
             @click="nextMonthHandler"
-            icon="#chevron-right"
+            icon="chevron-right"
             size="xs"
           />
         </div>
