@@ -2,11 +2,12 @@
 import IconBtn from "@/components/ui-kit/IconBtn.vue";
 import SelectSmall from "@/components/blocks/form/SelectSmall.vue";
 import { selectSmallOption } from "@/types/selectSmallOption";
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
-import {useCategoriesStore} from "@/store/categories";
-import {Category} from "@/types/category";
+import { ref, computed, onMounted } from "vue";
+import { useCategoriesStore } from "@/store/categories";
+import { Category } from "@/types/category";
+import { useClickOutside } from "@/components/composables/useClickOutside";
 
-const categoriesStore = useCategoriesStore()
+const categoriesStore = useCategoriesStore();
 
 const PRIORITIES: selectSmallOption[] = [
   {
@@ -28,15 +29,19 @@ const PRIORITIES: selectSmallOption[] = [
     color: "high",
   },
 ];
-const categories = ref<Category[]>([])
 
-const categoriesOptions = computed(() => categories.value.map((category) => {
-  return {
-    label: category.name,
-    value: category.id,
-    icon: category.name.toLowerCase(),
-  } as selectSmallOption
-}))
+const categories = ref<Category[]>([]);
+
+const categoriesOptions = computed(() =>
+  categories.value.map(
+    (category) =>
+      ({
+        label: category.name,
+        value: category.id,
+        icon: category.name.toLowerCase(),
+      } as selectSmallOption)
+  )
+);
 
 const title = ref<string>("");
 const priority = ref<selectSmallOption | null>(null);
@@ -45,28 +50,21 @@ const category = ref<selectSmallOption | null>(null);
 const isFocused = ref(false);
 const containerRef = ref<HTMLElement | null>(null);
 
+useClickOutside(containerRef, () => {
+  isFocused.value = false;
+});
 
-function onClickOutside(e: MouseEvent) {
-  if (containerRef.value && !containerRef.value.contains(e.target as Node)) {
-    isFocused.value = false;
-  }
-}
-
-function activateFocus() {
+const activateFocus = () => {
   isFocused.value = true;
-}
+};
 
-const isExpanded = computed(() => isFocused.value || !!priority.value?.value || title.value.length > 0);
+const isExpanded = computed(
+  () => isFocused.value || !!priority.value?.value || title.value.length > 0
+);
 
 onMounted(async () => {
-  document.addEventListener("click", onClickOutside);
-
   priority.value = PRIORITIES[0];
-
   categories.value = await categoriesStore.getCategories();
-});
-onBeforeUnmount(() => {
-  document.removeEventListener("click", onClickOutside);
 });
 </script>
 
@@ -77,7 +75,7 @@ onBeforeUnmount(() => {
     :class="{ filled: title.length > 0, focus: isFocused }"
   >
     <div class="task-add-input__input-wrapper">
-      <div class="task-add-input__placeholder">
+      <div class="task-add-input__placeholder" :class="{ hidden: isFocused || title.length > 0 }">
         <svg width="16" height="16">
           <use href="#plus"></use>
         </svg>
@@ -90,13 +88,20 @@ onBeforeUnmount(() => {
         placeholder="What would you like to do?"
         v-model="title"
         @focus="activateFocus"
+        autocomplete="off"
+        spellcheck="false"
       />
     </div>
 
     <div class="task-add-input__buttons" v-if="isExpanded">
       <SelectSmall v-model="priority" :options="PRIORITIES" icon="flag" />
 
-      <SelectSmall v-if="categoriesOptions.length > 0" v-model="category" :options="categoriesOptions" icon="tag" />
+      <SelectSmall
+        v-if="categoriesOptions.length > 0"
+        v-model="category"
+        :options="categoriesOptions"
+        icon="tag"
+      />
 
       <IconBtn
         type="submit"
@@ -115,19 +120,10 @@ onBeforeUnmount(() => {
   border: 1px solid var(--stroke-primary-invisible);
   border-radius: 8px;
   min-height: 33px;
-  transition: 0.3s;
+  transition: border-color 0.3s ease;
 
   &.focus {
     border-color: var(--bg-accent);
-  }
-
-  &.focus .task-add-input__placeholder,
-  &.filled .task-add-input__placeholder {
-    display: none;
-  }
-
-  &.filled .task-add-input__buttons {
-    display: flex;
   }
 
   &__input-wrapper {
@@ -161,11 +157,16 @@ onBeforeUnmount(() => {
     display: flex;
     align-items: center;
     gap: 6px;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+
+    &.hidden {
+      opacity: 0;
+    }
   }
 
   &__buttons {
     padding: 4px 7px 7px 7px;
-
     display: flex;
     align-items: center;
     gap: 4px;

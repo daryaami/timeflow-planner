@@ -1,4 +1,3 @@
-// composables/useDropdown.ts
 import { ref, onMounted, onBeforeUnmount, Ref } from "vue";
 
 export function useDropdown(rootEl: Ref<HTMLElement | null>) {
@@ -19,12 +18,20 @@ export function useDropdown(rootEl: Ref<HTMLElement | null>) {
     }
   };
 
+  const onKeydown = (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      close();
+    }
+  };
+
   onMounted(() => {
     document.addEventListener("click", onClick);
+    document.addEventListener("keydown", onKeydown);
   });
 
   onBeforeUnmount(() => {
     document.removeEventListener("click", onClick);
+    document.removeEventListener("keydown", onKeydown);
   });
 
   return {

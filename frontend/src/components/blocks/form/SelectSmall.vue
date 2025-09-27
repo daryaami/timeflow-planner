@@ -1,83 +1,82 @@
 <script setup lang="ts">
-import {ref, watch, computed} from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import Dropdown from "@/components/ui-kit/Dropdown.vue";
 import NavLink from "@/components/ui-kit/NavLink.vue";
-import {selectSmallOption} from "@/types/selectSmallOption";
-import {useDropdown} from "@/components/composables/useDropdown";
+import { selectSmallOption } from "@/types/selectSmallOption";
+import { useDropdown } from "@/components/composables/useDropdown";
 
-const props = withDefaults(defineProps<{
-  icon: string,
-  options: selectSmallOption[],
-  modelValue?: selectSmallOption | null
-}>(), {
-  modelValue: null
-})
+const props = withDefaults(
+  defineProps<{
+    icon: string;
+    options: selectSmallOption[];
+    modelValue?: selectSmallOption | null;
+  }>(),
+  {
+    modelValue: null,
+  }
+);
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: selectSmallOption | null): void
-}>()
+  (e: "update:modelValue", value: selectSmallOption | null): void;
+}>();
 
-const activeOption = ref<selectSmallOption | null>(props.modelValue);
+// теперь через computed get/set вместо watch
+const activeOption = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
+});
 
 const buttonColor = computed(() => {
-  if (!activeOption.value) return null
-  return activeOption.value.color ?? 'active'
-})
-
-const toggleActiveOption = (option: selectSmallOption) => {
-  isOpen.value = false;
-
-  if (activeOption.value?.value === option.value) {
-    activeOption.value = null;
-    return;
-  }
-
-  activeOption.value = option;
-}
-
-watch(() => props.modelValue, (newVal) => {
-  activeOption.value = newVal;
+  if (!activeOption.value) return "inactive";
+  return activeOption.value.color ?? "active";
 });
-
-watch(activeOption, (newVal) => {
-  emit('update:modelValue', newVal);
-});
-
 
 const rootEl = ref<HTMLElement | null>(null);
-const { isOpen, toggle } = useDropdown(rootEl);
+const { isOpen, toggle, close } = useDropdown(rootEl);
+
+const toggleActiveOption = (option: selectSmallOption) => {
+  activeOption.value =
+    activeOption.value?.value === option.value ? null : option;
+  close();
+};
+
+// закрытие по ESC
+const onKeydown = (e: KeyboardEvent) => {
+  if (e.key === "Escape") close();
+};
+
+onMounted(() => document.addEventListener("keydown", onKeydown));
+onBeforeUnmount(() => document.removeEventListener("keydown", onKeydown));
 </script>
 
 <template>
   <div class="select-small" ref="rootEl">
-    <button class="select-small__button"
-            :class="buttonColor ? buttonColor : ''"
-            @click.prevent="toggle">
-      <svg class="select-small__icon"
-           width="16"
-           height="16"
-           xmlns="http://www.w3.org/2000/svg">
-        <use :href="`#${ icon }`"></use>
+    <button
+      class="select-small__button"
+      :class="buttonColor"
+      @click.prevent="toggle"
+    >
+      <svg class="select-small__icon" width="16" height="16">
+        <use :href="`#${icon}`"></use>
       </svg>
     </button>
 
-    <Dropdown class="select-small__dropdown"
-              v-if="isOpen">
-      <NavLink v-for="(option, i) in options"
-               :key="i"
-               :text="option.label"
-               :leftIcon="option.icon? option.icon : undefined"
-               :rightIcon="option.value === activeOption?.value ? 'check-active' : undefined"
-               :class="option.color ? option.color : ''"
-               @click="toggleActiveOption(option)"
+    <Dropdown class="select-small__dropdown" v-if="isOpen">
+      <NavLink
+        v-for="(option, i) in options"
+        :key="i"
+        :text="option.label"
+        :leftIcon="option.icon || undefined"
+        :rightIcon="option.value === activeOption?.value ? 'check-active' : undefined"
+        :class="{ [option.color || '']: !!option.color }"
+        @click="toggleActiveOption(option)"
       />
     </Dropdown>
   </div>
 </template>
 
-
 <style lang="scss">
-@use '@/assets/scss/mixins/mixins' as *;
+@use "@/assets/scss/mixins/mixins" as *;
 
 .select-small {
   position: relative;
@@ -86,25 +85,20 @@ const { isOpen, toggle } = useDropdown(rootEl);
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     background: transparent;
     border: none;
     outline: none;
     padding: 2px;
     border-radius: 4px;
-
     color: var(--icon-inactive);
-
     cursor: pointer;
 
     @include hover {
       background: var(--bg-primary-hover);
     }
 
-    &.active {
-      & svg {
-        color: var(--text-accent);
-      }
+    &.active svg {
+      color: var(--text-accent);
     }
   }
 
@@ -113,11 +107,9 @@ const { isOpen, toggle } = useDropdown(rootEl);
     top: 100%;
     left: 0;
     z-index: 1;
-
     display: flex;
     flex-direction: column;
     gap: 6px;
-
     min-width: 212px;
   }
 
