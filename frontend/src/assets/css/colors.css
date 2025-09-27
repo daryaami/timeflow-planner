@@ -8,7 +8,7 @@
   --icon-primary: #232634;
   --icon-primary-hover: #3b61e8;
 
-
+  --icon-inactive: #858893;
 
   --bg-auth-google: #abfff0;
   --bg-tertiary: #482255;
@@ -40,4 +40,8 @@
   --text-accent: #3b61e8;
 
   --fc-border-color: var(--stroke-primary);
+
+  --medium: #FFAA0D;
+
+  --text-error: #e90606;
 }
