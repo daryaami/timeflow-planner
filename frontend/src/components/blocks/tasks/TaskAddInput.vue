@@ -3,12 +3,10 @@ import IconBtn from "@/components/ui-kit/IconBtn.vue";
 import SelectSmall from "@/components/blocks/form/SelectSmall.vue";
 import { selectSmallOption } from "@/types/selectSmallOption";
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import {useCategoriesStore} from "@/store/categories";
+import {Category} from "@/types/category";
 
-const title = ref<string>("");
-const priority = ref<selectSmallOption | null>(null);
-
-const isFocused = ref(false);
-const containerRef = ref<HTMLElement | null>(null);
+const categoriesStore = useCategoriesStore()
 
 const PRIORITIES: selectSmallOption[] = [
   {
@@ -30,6 +28,23 @@ const PRIORITIES: selectSmallOption[] = [
     color: "high",
   },
 ];
+const categories = ref<Category[]>([])
+
+const categoriesOptions = computed(() => categories.value.map((category) => {
+  return {
+    label: category.name,
+    value: category.id,
+    icon: category.name.toLowerCase(),
+  } as selectSmallOption
+}))
+
+const title = ref<string>("");
+const priority = ref<selectSmallOption | null>(null);
+const category = ref<selectSmallOption | null>(null);
+
+const isFocused = ref(false);
+const containerRef = ref<HTMLElement | null>(null);
+
 
 function onClickOutside(e: MouseEvent) {
   if (containerRef.value && !containerRef.value.contains(e.target as Node)) {
@@ -41,12 +56,14 @@ function activateFocus() {
   isFocused.value = true;
 }
 
-const isExpanded = computed(() => isFocused.value || !!priority.value?.value);
+const isExpanded = computed(() => isFocused.value || !!priority.value?.value || title.value.length > 0);
 
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener("click", onClickOutside);
 
   priority.value = PRIORITIES[0];
+
+  categories.value = await categoriesStore.getCategories();
 });
 onBeforeUnmount(() => {
   document.removeEventListener("click", onClickOutside);
@@ -78,6 +95,8 @@ onBeforeUnmount(() => {
 
     <div class="task-add-input__buttons" v-if="isExpanded">
       <SelectSmall v-model="priority" :options="PRIORITIES" icon="flag" />
+
+      <SelectSmall v-if="categoriesOptions.length > 0" v-model="category" :options="categoriesOptions" icon="tag" />
 
       <IconBtn
         type="submit"
@@ -145,9 +164,11 @@ onBeforeUnmount(() => {
   }
 
   &__buttons {
-    display: flex;
     padding: 4px 7px 7px 7px;
+
+    display: flex;
     align-items: center;
+    gap: 4px;
   }
 
   &__submit {

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import {ref, watch, onMounted, onBeforeUnmount} from "vue";
+import {ref, watch, computed} from "vue";
 import Dropdown from "@/components/ui-kit/Dropdown.vue";
 import NavLink from "@/components/ui-kit/NavLink.vue";
 import {selectSmallOption} from "@/types/selectSmallOption";
+import {useDropdown} from "@/components/composables/useDropdown";
 
 const props = withDefaults(defineProps<{
   icon: string,
@@ -18,6 +19,22 @@ const emit = defineEmits<{
 
 const activeOption = ref<selectSmallOption | null>(props.modelValue);
 
+const buttonColor = computed(() => {
+  if (!activeOption.value) return null
+  return activeOption.value.color ?? 'active'
+})
+
+const toggleActiveOption = (option: selectSmallOption) => {
+  isOpen.value = false;
+
+  if (activeOption.value?.value === option.value) {
+    activeOption.value = null;
+    return;
+  }
+
+  activeOption.value = option;
+}
+
 watch(() => props.modelValue, (newVal) => {
   activeOption.value = newVal;
 });
@@ -26,28 +43,16 @@ watch(activeOption, (newVal) => {
   emit('update:modelValue', newVal);
 });
 
-const isOpen = ref<boolean>(false);
 
-const closeOnOutsideClick = (event: MouseEvent) => {
-  if (!(event.target as HTMLDivElement).closest('.select-small')) {
-    isOpen.value = false;
-  }
-};
-
-onMounted(() => {
-  document.addEventListener('click', closeOnOutsideClick);
-});
-
-onBeforeUnmount(() => {
-  document.removeEventListener('click', closeOnOutsideClick);
-})
+const rootEl = ref<HTMLElement | null>(null);
+const { isOpen, toggle } = useDropdown(rootEl);
 </script>
 
 <template>
-  <div class="select-small">
+  <div class="select-small" ref="rootEl">
     <button class="select-small__button"
-            :class="activeOption?.color ? activeOption.color : ''"
-            @click.prevent="isOpen = !isOpen">
+            :class="buttonColor ? buttonColor : ''"
+            @click.prevent="toggle">
       <svg class="select-small__icon"
            width="16"
            height="16"
@@ -61,9 +66,10 @@ onBeforeUnmount(() => {
       <NavLink v-for="(option, i) in options"
                :key="i"
                :text="option.label"
-               leftIcon="flag"
+               :leftIcon="option.icon? option.icon : undefined"
+               :rightIcon="option.value === activeOption?.value ? 'check-active' : undefined"
                :class="option.color ? option.color : ''"
-               @click="activeOption = option; isOpen = false"
+               @click="toggleActiveOption(option)"
       />
     </Dropdown>
   </div>
@@ -93,6 +99,12 @@ onBeforeUnmount(() => {
 
     @include hover {
       background: var(--bg-primary-hover);
+    }
+
+    &.active {
+      & svg {
+        color: var(--text-accent);
+      }
     }
   }
 
