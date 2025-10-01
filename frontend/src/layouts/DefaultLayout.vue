@@ -23,7 +23,7 @@ import MainAside from "../components/blocks/main-aside/MainAside.vue";
     flex-direction: column;
     width: 100%;
     flex-grow: 1;
-    overflow: auto;
+    overflow-x: visible;
   }
 }
 </style>

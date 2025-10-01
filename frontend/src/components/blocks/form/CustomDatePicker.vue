@@ -1,65 +1,89 @@
 <script setup lang="ts">
 import VueDatePicker from "@vuepic/vue-datepicker";
+import { computed } from "vue";
 
-const props = defineProps({
-  placeholder: {
-    type: String || null,
-    default: null
-  },
+const props = defineProps<{
+  modelValue: Date | null
+}>();
+
+const emit = defineEmits<{
+  (e: "update:modelValue", value: Date | null): void
+}>();
+
+// синхронизация локального состояния с v-model
+const value = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
 });
 
-const ui = {
-  input: 'select-button-small',
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }).format(date);
 }
+
+const displayValue = computed(() => {
+  if (!value.value) return "Due";
+  return formatDate(value.value);
+});
 </script>
 
 <template>
-  <VueDatePicker
-    :ui="ui"
-    :placeholder="placeholder"
-  >
-    <template #input-icon>
-      <svg class="select-button-small__icon" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-        <use href="#date-range"></use>
-      </svg>
+  <VueDatePicker v-model="value">
+    <template #trigger>
+      <button type="button"
+              class="select-button-small"
+              :class="{ 'select-button-small--active': value }"
+      >
+        <svg class="select-button-small__icon" width="16" height="16">
+          <use href="#date-range"></use>
+        </svg>
+
+        <span>{{ displayValue }}</span>
+      </button>
     </template>
   </VueDatePicker>
 </template>
 
-<style lang="scss" scoped>
-@use '@/assets/scss/mixins/mixins.scss' as *;
+<style scoped lang="scss">
+@use '@/assets/scss/mixins/mixins' as *;
 
-div:has(.select-button-small) {
-  width: fit-content!important;
-}
-.dp__input_wrap {
-  .select-button-small {
-    font: var(--light-11);
-    color: var(--text-primary-disabled);
-    padding: 4px 2px 4px 20px;
-    border: none;
-    border-radius: 4px;
+.select-button-small {
+  position: relative;
 
-    &:placeholder-shown {
-      width: 43px;
-    }
+  font: var(--light-14);
+  color: var(--text-primary-disabled);
 
-    @include hover {
-      background: var(--bg-primary-hover);
-    }
+  padding: 4px 4px 4px 20px;
+  border-radius: 4px;
 
-    &__icon {
-      position: absolute;
-      left: 2px;
-      top: 50%;
-      transform: translateY(-50%);
-      pointer-events: none;
-    }
+  border: none;
+  outline: none;
+  background: transparent;
+
+  cursor: pointer;
+
+  @include hover {
+    background-color: var(--bg-primary-hover);
+  }
+
+  &--active {
+    color: var(--text-primary-hover);
+  }
+
+  &__icon {
+    position: absolute;
+    top: 50%;
+    left: 2px;
+    transform: translateY(-50%);
+
+    pointer-events: none;
   }
 }
 
-.dp--arrow-btn-nav {
-  order: 1;
+.dp__main {
+  width: fit-content!important;
 }
-
 </style>

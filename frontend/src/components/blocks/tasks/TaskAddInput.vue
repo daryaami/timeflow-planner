@@ -6,6 +6,7 @@ import { ref, computed, onMounted } from "vue";
 import { useCategoriesStore } from "@/store/categories";
 import { Category } from "@/types/category";
 import { useClickOutside } from "@/components/composables/useClickOutside";
+import CustomDatePicker from "@/components/blocks/form/CustomDatePicker.vue";
 
 const categoriesStore = useCategoriesStore();
 
@@ -34,18 +35,20 @@ const categories = ref<Category[]>([]);
 
 const categoriesOptions = computed(() =>
   categories.value.map(
-    (category) =>
-      ({
+    (category) => {
+      return {
         label: category.name,
-        value: category.id,
+        value: category.id.toString(),
         icon: category.name.toLowerCase(),
-      } as selectSmallOption)
+      } as selectSmallOption
+    }
   )
 );
 
 const title = ref<string>("");
 const priority = ref<selectSmallOption | null>(null);
 const category = ref<selectSmallOption | null>(null);
+const dueDate = ref<Date | null>(null);
 
 const isFocused = ref(false);
 const containerRef = ref<HTMLElement | null>(null);
@@ -59,7 +62,7 @@ const activateFocus = () => {
 };
 
 const isExpanded = computed(
-  () => isFocused.value || !!priority.value?.value || title.value.length > 0
+  () => isFocused.value || !!priority.value?.value || title.value.length > 0 || !!dueDate.value || !!category.value?.value
 );
 
 onMounted(async () => {
@@ -94,6 +97,8 @@ onMounted(async () => {
     </div>
 
     <div class="task-add-input__buttons" v-if="isExpanded">
+      <CustomDatePicker v-model="dueDate" />
+
       <SelectSmall v-model="priority" :options="PRIORITIES" icon="flag" />
 
       <SelectSmall
