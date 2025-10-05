@@ -1,23 +1,32 @@
 <script setup lang="ts">
-defineProps({
-  icon: String,
-  size: {
-    type: String,
-    default: 'm'
-  },
+import {UISize} from "@/types/UISize";
+
+withDefaults(defineProps<{
+  icon?: string,
+  size?: UISize,
+  disabled?: boolean,
+  variant?: 'accent' | null,
+}>(), {
+  icon: 'placeholder',
+  size: 'm',
+  disabled: false,
+  variant: null,
 })
+
 </script>
 
 <template>
-<button class="icon-button" :class="`icon-button--${size}`">
+<button class="icon-button"
+        :class="`icon-button--${size}${variant ? ` icon-button--${variant}` : ''}`"
+        :disabled="disabled">
   <svg width="24" height="24">
-    <use :href="icon"></use>
+    <use :href="`#${icon}`"></use>
   </svg>
 </button>
 </template>
 
 <style lang="scss">
-@use '@/assets/scss/mixins/resets.scss' as *;
+@use '@/assets/scss/mixins/resets' as *;
 @use '@/assets/scss/mixins/mixins' as *;
 
 .icon-button {
@@ -31,7 +40,6 @@ defineProps({
   @include hover {
     color: var(--bg-accent-secondary);
   }
-
 
   & svg {
     display: block;
@@ -57,6 +65,15 @@ defineProps({
   &--xs {
     width: 16px;
     height: 16px;
+  }
+
+  &--accent {
+    color: var(--icon-hover);
+  }
+
+  &:disabled {
+    color: var(--icon-disabled);
+    cursor: default;
   }
 }
 </style>

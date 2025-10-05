@@ -2,7 +2,7 @@ import {defineStore} from "pinia";
 import {BASE_API_URL} from "@/config";
 import {useAuthStore} from "@/store/auth"
 import {ref} from "vue";
-import {Task} from "@/types/task";
+import {Task, TaskCreate} from "@/types/task";
 
 export const useTasksStore = defineStore('tasks', () => {
   const tasks = ref<Task[]>([])
@@ -32,8 +32,7 @@ export const useTasksStore = defineStore('tasks', () => {
     return tasks.value as Task[]
   }
 
-  const createTask = async (payload: object) => {
-    // @TO-DO Типизировать payload
+  const createTask = async (payload: TaskCreate) => {
     await fetch(`${BASE_API_URL}/tasks/`, {
       method: 'POST',
       credentials: 'include',

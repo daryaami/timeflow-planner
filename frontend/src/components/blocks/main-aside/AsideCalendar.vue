@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import IconBtn from "@/components/blocks/buttons/icon-btn.vue";
+import IconBtn from "@/components/ui-kit/IconBtn.vue";
 import {getCurrentWeekMonday, getTomorrow} from "@/components/js/time-utils";
 
 const props = defineProps({
@@ -36,7 +36,7 @@ const days = computed(() => {
 })
 
 const currentMonth = computed(() => {
-  return `${currentCalendarDate.value.toLocaleString('default', { month: 'long' })} ${currentCalendarDate.value.getFullYear()}`;
+  return `${currentCalendarDate.value.toLocaleString('en-US', { month: 'long' })} ${currentCalendarDate.value.getFullYear()}`;
 })
 
 const nextMonthHandler = () => {
@@ -56,13 +56,13 @@ const prevMonthHandler = () => {
         <div class="aside-calendar__buttons-wrapper">
           <IconBtn
             @click="prevMonthHandler"
-            icon="#chevron-left"
+            icon="chevron-left"
             size="xs"
           />
 
           <IconBtn
             @click="nextMonthHandler"
-            icon="#chevron-right"
+            icon="chevron-right"
             size="xs"
           />
         </div>

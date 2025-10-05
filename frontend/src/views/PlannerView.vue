@@ -13,7 +13,7 @@ import LoaderVue from '../components/blocks/loaders/Loader.vue';
 import {useEventsStore} from "@/store/events";
 import {getEndOfMonth, getStartOfMonth} from "@/components/js/time-utils";
 import CreateTaskPopup from "@/components/blocks/planner/CreateTaskPopup.vue";
-import TasksList from "@/components/blocks/tasks/TasksList.vue";
+import AsideTasksList from "@/components/blocks/tasks/AsideTasksList.vue";
 
 const isLoading = ref<boolean>(true);
 
@@ -100,7 +100,7 @@ onMounted(async () => {
         <CreateTaskPopup />
       </div>
   </div>
-    <TasksList />
+    <AsideTasksList />
 </div>
 
 

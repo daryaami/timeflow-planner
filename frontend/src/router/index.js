@@ -3,6 +3,7 @@ import Callback from '../views/Callback.vue'
 import LoginView from '../views/LoginView.vue'
 import PlannerView from '../views/PlannerView.vue'
 import AuthCheck from "@/views/AuthCheck.vue";
+import TasksView from "@/views/TasksView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -36,6 +37,14 @@ const router = createRouter({
       meta: {
         layout: 'default',
         metaTitle: 'Planner'
+      },
+    },
+    {
+      path: '/tasks',
+      component: TasksView,
+      meta: {
+        layout: 'default',
+        metaTitle: 'Tasks'
       },
     }
   ],

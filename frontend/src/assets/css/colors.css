@@ -1,15 +1,27 @@
 :root {
+  --text-primary: #232634;
+  --text-primary-hover: #3b61e8;
+  --text-primary-disabled: #858893;
+
+  --text-primary-muted: #363945;
+
+  --icon-primary: #232634;
+  --icon-primary-hover: #3b61e8;
+
+  --icon-inactive: #858893;
+
   --bg-auth-google: #abfff0;
   --bg-tertiary: #482255;
   --text-secondary: #fcfcfc;
   --bg-primary: var(--text-secondary);
-  --text-primary: #232634;
+
   --text-secondary-muted: #d9d9d9;
-  --text-primary-muted: #363945;
-  --icon-primary: var(--text-primary);
-  --icon-hover: #00d0c5;
+
+  --icon-hover: #3b61e8;
+
+  --icon-disabled: #c5c5c5;
+
   --bg-accent: #3b61e8;
-  --text-primary-disabled: #858893;
 
   --bg-primary-hover: #e8e8e8;
   --bg-accent-hover: #2d54dc;
@@ -19,10 +31,17 @@
   --bg-secondary: #f6f6f6;
 
   --stroke-primary: #d9d9d9;
+
+  --stroke-primary-invisible: rgba(217, 217, 217, 0.5);
+
   --stroke-secondary: #C5C5C5;
 
   --text-highlight: #fff;
   --text-accent: #3b61e8;
 
   --fc-border-color: var(--stroke-primary);
+
+  --medium: #FFAA0D;
+
+  --text-error: #e90606;
 }

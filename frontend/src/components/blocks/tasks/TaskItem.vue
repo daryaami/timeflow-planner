@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {Task} from "@/types/task";
-import IconBtn from "@/components/blocks/buttons/icon-btn.vue";
+import IconBtn from "@/components/ui-kit/IconBtn.vue";
 import {useTasksStore} from "@/store/tasks";
 import {computed} from "vue";
 
@@ -58,7 +58,7 @@ const tasksStore = useTasksStore()
     <IconBtn
       @click.prevent="tasksStore.deleteTask(task.id)"
       class="task-item__delete"
-      icon="#delete"
+      icon="delete"
       size="xs"
     />
   </div>

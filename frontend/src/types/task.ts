@@ -8,7 +8,6 @@ export interface TimeLog {
 }
 
 export type TaskPriority = "NONE" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
-// подставь свои 5 enum-значений
 
 export interface Task {
   id: number;                // readOnly
@@ -30,3 +29,14 @@ export type WithEl<T> = T & { el: Element | null };
 
 // Конкретный UI-тип для этого компонента
 export type UiTask = WithEl<Task>;
+
+export interface TaskCreate {
+  title: string;
+  priority?: TaskPriority;
+  category?: number;
+  due_date?: string;
+  calendar?: number;
+  duration?: number;
+  notes?:string,
+  completed?: boolean,
+}

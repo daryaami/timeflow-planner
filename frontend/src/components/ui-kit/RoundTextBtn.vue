@@ -24,7 +24,7 @@ defineProps({
 </template>
 
 <style scoped lang="scss">
-@use '@/assets/scss/mixins/resets.scss' as *;
+@use '@/assets/scss/mixins/resets' as *;
 @use '@/assets/scss/mixins/mixins' as *;
 
 .round-text-btn {
