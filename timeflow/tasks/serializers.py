@@ -32,13 +32,24 @@ class TaskSerializer(serializers.ModelSerializer):
     )
     title = serializers.CharField(max_length=255, required=False)
 
+    # Вложенный сериализатор для чтения
+    category = CategorySerializer(read_only=True)
+    # Отдельное поле для записи id категории
+    category_id = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(),
+        source='category',
+        write_only=True,
+        required=False
+    )
+
     class Meta:
         model = Task
         fields = [
             'id',
             'title',
             'priority',
-            'category',
+            'category',      # nested read
+            'category_id',   # write via id
             'duration',
             'due_date',
             'calendar',
