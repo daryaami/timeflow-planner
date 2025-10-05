@@ -1,54 +1,19 @@
 <script setup lang="ts">
 import IconBtn from "@/components/ui-kit/IconBtn.vue";
 import SelectSmall from "@/components/blocks/form/SelectSmall.vue";
-import { selectSmallOption } from "@/types/selectSmallOption";
+import { SelectSmallOption } from "@/types/selectSmallOption";
 import { ref, computed, onMounted } from "vue";
 import { useCategoriesStore } from "@/store/categories";
 import { Category } from "@/types/category";
 import { useClickOutside } from "@/components/composables/useClickOutside";
 import CustomDatePicker from "@/components/blocks/form/CustomDatePicker.vue";
+import {useTasksStore} from "@/store/tasks";
+import {TaskCreate, TaskPriority} from "@/types/task";
+import {PRIORITIES} from "@/constants/tasks";
 
 const categoriesStore = useCategoriesStore();
+const tasksStore = useTasksStore();
 
-const PRIORITIES: selectSmallOption[] = [
-  {
-    value: null,
-    label: "No priority",
-    icon: "flag",
-    color: "inactive",
-  },
-  {
-    value: "medium",
-    label: "Medium",
-    icon: "flag",
-    color: "medium",
-  },
-  {
-    value: "high",
-    label: "High",
-    icon: "flag",
-    color: "high",
-  },
-];
-
-const categories = ref<Category[]>([]);
-
-const categoriesOptions = computed(() =>
-  categories.value.map(
-    (category) => {
-      return {
-        label: category.name,
-        value: category.id.toString(),
-        icon: category.name.toLowerCase(),
-      } as selectSmallOption
-    }
-  )
-);
-
-const title = ref<string>("");
-const priority = ref<selectSmallOption | null>(null);
-const category = ref<selectSmallOption | null>(null);
-const dueDate = ref<Date | null>(null);
 
 const isFocused = ref(false);
 const containerRef = ref<HTMLElement | null>(null);
@@ -61,9 +26,55 @@ const activateFocus = () => {
   isFocused.value = true;
 };
 
-const isExpanded = computed(
-  () => isFocused.value || !!priority.value?.value || title.value.length > 0 || !!dueDate.value || !!category.value?.value
+const hasAnyValue = computed(() =>
+  !!title.value || !!dueDate.value || !!priority.value?.value || !!category.value?.value
 );
+
+const isExpanded = computed(() => isFocused.value || hasAnyValue.value);
+
+
+const categories = ref<Category[]>([]);
+
+const categoriesOptions = computed(() =>
+  categories.value.map(
+    (category) => {
+      return {
+        label: category.name,
+        value: category.id.toString(),
+        icon: category.name.toLowerCase(),
+      }
+    }
+  )
+);
+
+const title = ref<string>("");
+const priority = ref<SelectSmallOption<TaskPriority | null> | null>(null);
+const category = ref<SelectSmallOption<number> | null>(null);
+const dueDate = ref<Date | null>(null);
+
+const isSubmitting = ref(false);
+
+const submitHandler = async () => {
+  if (!title.value.trim() || isSubmitting.value) return;
+  isSubmitting.value = true;
+  try {
+    const data: TaskCreate = { title: title.value };
+    if (priority.value?.value) data.priority = priority.value.value;
+    if (category.value?.value) data.category = category.value.value;
+    if (dueDate.value) data.due_date = dueDate.value.toISOString();
+    await tasksStore.createTask(data);
+    resetForm();
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+
+const resetForm = () => {
+  title.value = "";
+  priority.value = null;
+  category.value = null;
+  dueDate.value = null;
+};
 
 onMounted(async () => {
   priority.value = PRIORITIES[0];
@@ -72,7 +83,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div
+  <form
+    @submit.prevent="submitHandler"
     ref="containerRef"
     class="task-add-input"
     :class="{ filled: title.length > 0, focus: isFocused }"
@@ -96,7 +108,7 @@ onMounted(async () => {
       />
     </div>
 
-    <div class="task-add-input__buttons" v-if="isExpanded">
+    <div class="task-add-input__buttons" v-show="isExpanded">
       <CustomDatePicker v-model="dueDate" />
 
       <SelectSmall v-model="priority" :options="PRIORITIES" icon="flag" />
@@ -114,10 +126,10 @@ onMounted(async () => {
         icon="arrow-up"
         variant="accent"
         size="s"
-        :disabled="title.length === 0"
+        :disabled="!title.length || isSubmitting"
       />
     </div>
-  </div>
+  </form>
 </template>
 
 <style scoped lang="scss">

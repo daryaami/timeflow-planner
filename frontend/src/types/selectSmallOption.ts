@@ -1,7 +1,7 @@
-export interface selectSmallOption {
-  label: string,
-  value: string | null,
-  icon: string,
-  class?: string,
-  color?: 'inactive' | 'medium' | 'high'
+export interface SelectSmallOption<T = string | null> {
+  label: string;
+  value: T;
+  icon: string;
+  class?: string;
+  color?: "inactive" | "medium" | "high";
 }
