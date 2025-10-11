@@ -2,14 +2,14 @@
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import Dropdown from "@/components/ui-kit/Dropdown.vue";
 import NavLink from "@/components/ui-kit/NavLink.vue";
-import { selectSmallOption } from "@/types/selectSmallOption";
+import { SelectSmallOption } from "@/types/selectSmallOption";
 import { useDropdown } from "@/components/composables/useDropdown";
 
 const props = withDefaults(
   defineProps<{
     icon: string;
-    options: selectSmallOption[];
-    modelValue?: selectSmallOption | null;
+    options: SelectSmallOption[];
+    modelValue?: SelectSmallOption | null;
   }>(),
   {
     modelValue: null,
@@ -17,7 +17,7 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: selectSmallOption | null): void;
+  (e: "update:modelValue", value: SelectSmallOption | null): void;
 }>();
 
 // теперь через computed get/set вместо watch
@@ -34,7 +34,7 @@ const buttonColor = computed(() => {
 const rootEl = ref<HTMLElement | null>(null);
 const { isOpen, toggle, close } = useDropdown(rootEl);
 
-const toggleActiveOption = (option: selectSmallOption) => {
+const toggleActiveOption = (option: SelectSmallOption) => {
   activeOption.value =
     activeOption.value?.value === option.value ? null : option;
   close();
@@ -51,7 +51,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKeydown));
 
 <template>
   <div class="select-small" ref="rootEl">
-    <button
+    <button type="button"
       class="select-small__button"
       :class="buttonColor"
       @click.prevent="toggle"

@@ -59,9 +59,43 @@ export const useTasksStore = defineStore('tasks', () => {
     await fetchTasks()
   }
 
+  const debounceMap = new Map<number, any>()
+
+  const toggleCompleteTask = (id: number, isCompleted: boolean) => {
+    // Если был предыдущий таймер — очищаем его
+    if (debounceMap.has(id)) {
+      clearTimeout(debounceMap.get(id))
+    }
+
+    // Создаём новый с задержкой (например, 400 мс)
+    const timeout = setTimeout(async () => {
+      debounceMap.delete(id) // Удаляем по завершении
+
+      await fetch(`${BASE_API_URL}/tasks/${id}/`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Authorization': `JWT ${authStore.getAccessToken()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ completed: isCompleted })
+      })
+    }, 400)
+
+    debounceMap.set(id, timeout)
+  }
+
   const getTaskById = (id: number) => {
     return tasks.value.find(task => task.id === id)
   }
 
-  return { tasks, fetchTasks, getTasks, createTask, deleteTask, getTaskById}
+  return {
+    tasks,
+    fetchTasks,
+    getTasks,
+    createTask,
+    deleteTask,
+    getTaskById,
+    toggleCompleteTask
+  }
 })

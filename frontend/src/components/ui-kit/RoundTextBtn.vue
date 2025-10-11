@@ -17,7 +17,7 @@ defineProps({
 <button class="round-text-btn">
   <span class="round-text-btn__text">{{ text }}</span>
   <svg v-if="icon" class="round-text-btn__icon" width="14" height="14">
-    <use :href="icon"></use>
+    <use :href="`#${icon}`"></use>
   </svg>
 </button>
 

@@ -19,7 +19,6 @@ const getMonthStartDates = (start: Date, end: Date): string[] => {
   return result;
 }
 
-// Вспомогательная функция форматирования
 const formatDate = (date: Date): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -48,5 +47,41 @@ const addMinutes = (date: Date, minutes: number): Date => {
   return copy
 }
 
+const formatDueDate = (date: Date): string => {
+  const now = new Date()
 
-export { getStartOfMonth, getEndOfMonth, getMonthStartDates, formatDate, getTomorrow, getCurrentWeekMonday, addMinutes  };
+  // Находим начало и конец текущей недели
+  const startOfWeek = new Date(now)
+  startOfWeek.setDate(now.getDate() - now.getDay()) // воскресенье
+  startOfWeek.setHours(0, 0, 0, 0)
+
+  const endOfWeek = new Date(startOfWeek)
+  endOfWeek.setDate(startOfWeek.getDate() + 6) // суббота
+  endOfWeek.setHours(23, 59, 59, 999)
+
+  if (date >= startOfWeek && date <= endOfWeek) {
+    return date.toLocaleString("en-US", {
+      weekday: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    }).replace(",", "")
+  } else {
+    return date.toLocaleString("en-US", {
+      day: "numeric",
+      month: "long"
+    })
+  }
+}
+
+
+export {
+  getStartOfMonth,
+  getEndOfMonth,
+  getMonthStartDates,
+  formatDate,
+  getTomorrow,
+  getCurrentWeekMonday,
+  addMinutes,
+  formatDueDate
+};
