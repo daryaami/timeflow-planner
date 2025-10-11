@@ -37,6 +37,7 @@ const toggleCompleteTask = (e) => {
         <path d="M6.42133 11.7071L4.10128 9.38706C3.88744 9.17322 3.94594 8.81272 4.21643 8.67748C4.34893 8.61123 4.50577 8.61558 4.63439 8.68908L6.24521 9.60955C6.71753 9.87945 7.31896 9.72228 7.59885 9.2558L10.4395 4.52145C10.4939 4.43079 10.5789 4.36258 10.6792 4.32915C11.0496 4.20567 11.387 4.58718 11.2191 4.93974L8.12855 11.4299C7.96272 11.7782 7.61139 12 7.22568 12H7.12844C6.86322 12 6.60887 11.8947 6.42133 11.7071Z" fill="#FCFCFC" />
       </svg>
     </label>
+    <span class="task-item__category" v-if="task.category">{{ task.category.name }}</span>
     <span class="task-item__title">{{ task.title }}</span>
     <span class="task-item__due" v-if="dueDate">{{ dueDate }}</span>
     <IconBtn
@@ -123,6 +124,15 @@ const toggleCompleteTask = (e) => {
     & svg {
       display: none;
     }
+  }
+
+  &__category {
+    display: block;
+
+    font: var(--light-11);
+    color: var(--text-primary-disabled);
+
+    margin-bottom: 6px;
   }
 
   &__title {

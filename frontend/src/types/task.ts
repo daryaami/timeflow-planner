@@ -33,7 +33,7 @@ export type UiTask = WithEl<Task>;
 export interface TaskCreate {
   title: string;
   priority?: TaskPriority;
-  category?: number;
+  category_id?: number;
   due_date?: string;
   calendar?: number;
   duration?: number;

@@ -60,7 +60,7 @@ const submitHandler = async () => {
   try {
     const data: TaskCreate = { title: title.value };
     if (priority.value?.value) data.priority = priority.value.value;
-    if (category.value?.value) data.category = category.value.value;
+    if (category.value?.value) data.category_id = category.value.value;
     if (dueDate.value) data.due_date = dueDate.value.toISOString();
     await tasksStore.createTask(data);
     resetForm();
