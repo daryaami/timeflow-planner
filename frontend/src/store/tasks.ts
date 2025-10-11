@@ -62,12 +62,10 @@ export const useTasksStore = defineStore('tasks', () => {
   const debounceMap = new Map<number, any>()
 
   const toggleCompleteTask = (id: number, isCompleted: boolean) => {
-    // Если был предыдущий таймер — очищаем его
     if (debounceMap.has(id)) {
       clearTimeout(debounceMap.get(id))
     }
 
-    // Создаём новый с задержкой (например, 400 мс)
     const timeout = setTimeout(async () => {
       debounceMap.delete(id) // Удаляем по завершении
 

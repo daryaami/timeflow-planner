@@ -21,8 +21,8 @@ export const useEventsStore = defineStore('events', () => {
       start: event.start.dateTime,
       end: event.end?.dateTime,
       url: event.htmlLink,
-      backgroundColor: '#49b5c4',
-      borderColor: '#49b5c4',
+      backgroundColor: event.color,
+      borderColor: event.color,
     }
   }
 
@@ -92,5 +92,37 @@ export const useEventsStore = defineStore('events', () => {
     }
   }
 
-  return { events, getEvents, createEvent }
+  const debounceMap = new Map<number, any>()
+
+  const updateEventStart = (id: number, newStart: string) => {
+    if (debounceMap.has(id)) {
+      clearTimeout(debounceMap.get(id))
+    }
+
+    const timeout = setTimeout(async () => {
+      debounceMap.delete(id) // Удаляем по завершении
+
+      await fetch(`${BASE_API_URL}/events/`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Authorization': `JWT ${authStore.getAccessToken()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          event_id: id,
+          start: newStart
+        })
+      })
+    }, 400)
+
+    debounceMap.set(id, timeout)
+  }
+
+  return {
+    events,
+    getEvents,
+    createEvent,
+    updateEventStart
+  }
 })
