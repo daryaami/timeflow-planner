@@ -1,9 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Callback from '../views/Callback.vue'
-import LoginView from '../views/LoginView.vue'
-import PlannerView from '../views/PlannerView.vue'
-import AuthCheck from "@/views/AuthCheck.vue";
-import TasksView from "@/views/TasksView.vue";
+
+const Callback = import("../views/Callback.vue");
+const LoginView = import("../views/LoginView.vue");
+const PlannerView = import("../views/PlannerView.vue");
+const AuthCheck = import("../views/AuthCheck.vue");
+const TasksView = import("../views/TasksView.vue");
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
