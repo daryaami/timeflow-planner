@@ -26,19 +26,17 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class TaskSerializer(serializers.ModelSerializer):
     time_logs = TimeLogSerializer(many=True, read_only=True)
-    calendar = serializers.PrimaryKeyRelatedField(
+    user_calendar_id = serializers.PrimaryKeyRelatedField(
         queryset=UserCalendar.objects.all(),
+        source='calendar',
         required=False
     )
     title = serializers.CharField(max_length=255, required=False)
 
-    # Вложенный сериализатор для чтения
-    category = CategorySerializer(read_only=True)
-    # Отдельное поле для записи id категории
+    # Поле для чтения и записи id категории
     category_id = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(),
         source='category',
-        write_only=True,
         required=False
     )
 
@@ -48,11 +46,10 @@ class TaskSerializer(serializers.ModelSerializer):
             'id',
             'title',
             'priority',
-            'category',      # nested read
-            'category_id',   # write via id
+            'category_id',
             'duration',
             'due_date',
-            'calendar',
+            'user_calendar_id',
             'completed',
             'created_at',
             'updated_at',
