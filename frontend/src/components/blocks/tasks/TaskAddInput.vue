@@ -7,14 +7,16 @@ import { useCategoriesStore } from "@/store/categories";
 import { Category } from "@/types/category";
 import { useClickOutside } from "@/components/composables/useClickOutside";
 import CustomDatePicker from "@/components/blocks/form/CustomDatePicker.vue";
-import {useTasksStore} from "@/store/tasks";
-import {TaskCreate, TaskPriority} from "@/types/task";
-import {PRIORITIES} from "@/constants/tasks";
+import { useTasksStore } from "@/store/tasks";
+import { TaskCreate, TaskPriority } from "@/types/task";
+import { PRIORITIES } from "@/constants/tasks";
 
 const categoriesStore = useCategoriesStore();
 const tasksStore = useTasksStore();
 
-
+// ----------------------------
+// Focus / UI state
+// ----------------------------
 const isFocused = ref(false);
 const containerRef = ref<HTMLElement | null>(null);
 
@@ -26,42 +28,56 @@ const activateFocus = () => {
   isFocused.value = true;
 };
 
+// ----------------------------
+// Form fields (value-based)
+// ----------------------------
+const title = ref<string>("");
+const priority = ref<TaskPriority | null>(null);
+const category = ref<string | null>(null);
+const dueDate = ref<Date | null>(null);
+
+// ----------------------------
+// Categories
+// ----------------------------
+const categories = ref<Category[]>([]);
+
+const categoriesOptions = computed<SelectSmallOption[]>(() =>
+  categories.value.map((category) => ({
+    label: category.name,
+    value: category.id.toString(),
+    icon: category.name.toLowerCase(),
+  }))
+);
+
+// ----------------------------
+// Derived UI state
+// ----------------------------
 const hasAnyValue = computed(() =>
-  !!title.value || !!dueDate.value || !!priority.value?.value || !!category.value?.value
+  !!title.value ||
+  !!dueDate.value ||
+  !!priority.value ||
+  !!category.value
 );
 
 const isExpanded = computed(() => isFocused.value || hasAnyValue.value);
 
-
-const categories = ref<Category[]>([]);
-
-const categoriesOptions = computed(() =>
-  categories.value.map(
-    (category) => {
-      return {
-        label: category.name,
-        value: category.id.toString(),
-        icon: category.name.toLowerCase(),
-      }
-    }
-  )
-);
-
-const title = ref<string>("");
-const priority = ref<SelectSmallOption<TaskPriority | null> | null>(null);
-const category = ref<SelectSmallOption<number> | null>(null);
-const dueDate = ref<Date | null>(null);
-
+// ----------------------------
+// Submit
+// ----------------------------
 const isSubmitting = ref(false);
 
 const submitHandler = async () => {
   if (!title.value.trim() || isSubmitting.value) return;
+
   isSubmitting.value = true;
+
   try {
     const data: TaskCreate = { title: title.value };
-    if (priority.value?.value) data.priority = priority.value.value;
-    if (category.value?.value) data.category_id = category.value.value;
+
+    if (priority.value) data.priority = priority.value;
+    if (category.value) data.category_id = Number(category.value);
     if (dueDate.value) data.due_date = dueDate.value.toISOString();
+
     await tasksStore.createTask(data);
     resetForm();
   } finally {
@@ -76,9 +92,14 @@ const resetForm = () => {
   dueDate.value = null;
 };
 
+// ----------------------------
+// Init
+// ----------------------------
 onMounted(async () => {
-  priority.value = PRIORITIES[0];
   categories.value = await categoriesStore.getCategories();
+
+  // DEFAULT PRIORITY — теперь только value
+  priority.value = PRIORITIES[0].value;
 });
 </script>
 
@@ -89,6 +110,7 @@ onMounted(async () => {
     class="task-add-input"
     :class="{ filled: title.length > 0, focus: isFocused }"
   >
+    <!-- Input field -->
     <div class="task-add-input__input-wrapper">
       <div class="task-add-input__placeholder" :class="{ hidden: isFocused || title.length > 0 }">
         <svg width="16" height="16">
@@ -108,10 +130,15 @@ onMounted(async () => {
       />
     </div>
 
+    <!-- Buttons -->
     <div class="task-add-input__buttons" v-show="isExpanded">
       <CustomDatePicker v-model="dueDate" />
 
-      <SelectSmall v-model="priority" :options="PRIORITIES" icon="flag" />
+      <SelectSmall
+        v-model="priority"
+        :options="PRIORITIES"
+        icon="flag"
+      />
 
       <SelectSmall
         v-if="categoriesOptions.length > 0"

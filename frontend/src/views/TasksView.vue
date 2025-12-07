@@ -1,8 +1,25 @@
 <script setup lang="ts">
 import TaskHeader from "@/components/blocks/TaskHeader.vue";
-import checklistIcon from "@/assets/img/checklist.svg"
+import checklistIcon from "@/assets/img/checklist.svg";
 import TasksList from "@/components/blocks/tasks/TasksList.vue";
 import TaskAddInput from "@/components/blocks/tasks/TaskAddInput.vue";
+import {Task} from "@/types/task";
+import {ref, watch} from "vue";
+import TaskCard from "@/components/blocks/tasks/TaskCard.vue";
+import {useTasksStore} from "@/store/tasks";
+
+const activeTask = ref<Task | null>(null)
+const taskStore = useTasksStore()
+
+watch(
+  () => taskStore.tasks,
+  () => {
+    if (!activeTask.value) return
+    const updated = taskStore.tasks.find(t => t.id === activeTask.value!.id)
+    if (updated) activeTask.value = { ...updated }
+  },
+  { deep: true }
+)
 </script>
 
 <template>
@@ -11,15 +28,29 @@ import TaskAddInput from "@/components/blocks/tasks/TaskAddInput.vue";
     :icon="checklistIcon"
   />
   <div class="tasks-page">
-    <TaskAddInput class="tasks-page__form"/>
-    <TasksList/>
+    <div>
+      <TaskAddInput class="tasks-page__form"/>
+      <TasksList
+        v-model="activeTask"
+      />
+    </div>
+    <div v-if="activeTask">
+      <TaskCard :task="activeTask" />
+    </div>
   </div>
 </template>
 
 <style scoped lang="scss">
 .tasks-page {
-  max-width: 577px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+
+  height: 100%;
+
+  padding-bottom: 44px;
   padding-left: 30px;
+  padding-right: 30px;
 
   &__form {
     margin-bottom: 30px;

@@ -3,16 +3,22 @@ import VueDatePicker from "@vuepic/vue-datepicker";
 import { computed } from "vue";
 
 const props = defineProps<{
-  modelValue: Date | null
+  modelValue: Date | string | null;
 }>();
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: Date | null): void
+  (e: "update:modelValue", value: Date | null): void;
 }>();
 
-// синхронизация локального состояния с v-model
+// безопасная синхронизация локального значения
 const value = computed({
-  get: () => props.modelValue,
+  get: () => {
+    if (typeof props.modelValue === "string") {
+      const d = new Date(props.modelValue);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    return props.modelValue;
+  },
   set: (val) => emit("update:modelValue", val),
 });
 
@@ -33,14 +39,14 @@ const displayValue = computed(() => {
 <template>
   <VueDatePicker v-model="value">
     <template #trigger>
-      <button type="button"
-              class="select-button-small"
-              :class="{ 'select-button-small--active': value }"
+      <button
+        type="button"
+        class="select-button-small"
+        :class="{ 'select-button-small--active': value }"
       >
         <svg class="select-button-small__icon" width="16" height="16">
           <use href="#date-range"></use>
         </svg>
-
         <span>{{ displayValue }}</span>
       </button>
     </template>
@@ -48,7 +54,7 @@ const displayValue = computed(() => {
 </template>
 
 <style scoped lang="scss">
-@use '@/assets/scss/mixins/mixins' as *;
+@use "@/assets/scss/mixins/mixins" as *;
 
 .select-button-small {
   position: relative;
@@ -78,12 +84,11 @@ const displayValue = computed(() => {
     top: 50%;
     left: 2px;
     transform: translateY(-50%);
-
     pointer-events: none;
   }
 }
 
 .dp__main {
-  width: fit-content!important;
+  width: fit-content !important;
 }
 </style>

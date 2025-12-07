@@ -17,20 +17,10 @@
   width: 100%;
   border-radius: 50%;
   border: 5px solid #67DEC9;
-  border-radius: 50%;
 
-  &::before {
-    content: "";
-    position: absolute;
-    height: 100%;
-    width: 100%;
-    border-radius: 50%;
-    border: 5px solid transparent;
-    border-top-color: #482255;
-    top: -5px;
-    left: -5px;
-    animation: spin 1s linear infinite;
-  }
+  border-top-color: #482255;
+
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {

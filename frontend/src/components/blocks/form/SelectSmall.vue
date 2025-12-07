@@ -1,30 +1,27 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed } from "vue";
 import Dropdown from "@/components/ui-kit/Dropdown.vue";
 import NavLink from "@/components/ui-kit/NavLink.vue";
 import { SelectSmallOption } from "@/types/selectSmallOption";
 import { useDropdown } from "@/components/composables/useDropdown";
 
-const props = withDefaults(
-  defineProps<{
-    icon: string;
-    options: SelectSmallOption[];
-    modelValue?: SelectSmallOption | null;
-  }>(),
-  {
-    modelValue: null,
-  }
-);
-
-const emit = defineEmits<{
-  (e: "update:modelValue", value: SelectSmallOption | null): void;
-}>();
-
-// теперь через computed get/set вместо watch
-const activeOption = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
+const modelValue = defineModel<string | null>({
+  default: null
 });
+
+interface Props {
+  icon: string,
+  options: SelectSmallOption[],
+  withLabel?: boolean,
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  withLabel: false,
+})
+
+const activeOption = computed(() =>
+  props.options.find(o => o.value === modelValue.value) || null
+);
 
 const buttonColor = computed(() => {
   if (!activeOption.value) return "inactive";
@@ -35,19 +32,11 @@ const rootEl = ref<HTMLElement | null>(null);
 const { isOpen, toggle, close } = useDropdown(rootEl);
 
 const toggleActiveOption = (option: SelectSmallOption) => {
-  activeOption.value =
-    activeOption.value?.value === option.value ? null : option;
+  modelValue.value = modelValue.value === option.value ? null : option.value;
   close();
 };
-
-// закрытие по ESC
-const onKeydown = (e: KeyboardEvent) => {
-  if (e.key === "Escape") close();
-};
-
-onMounted(() => document.addEventListener("keydown", onKeydown));
-onBeforeUnmount(() => document.removeEventListener("keydown", onKeydown));
 </script>
+
 
 <template>
   <div class="select-small" ref="rootEl">
@@ -59,6 +48,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKeydown));
       <svg class="select-small__icon" width="16" height="16">
         <use :href="`#${icon}`"></use>
       </svg>
+      <span class="select-small__label" v-if="withLabel && activeOption">{{ activeOption.label }}</span>
     </button>
 
     <Dropdown class="select-small__dropdown" v-if="isOpen">
@@ -85,6 +75,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKeydown));
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 4px;
     background: transparent;
     border: none;
     outline: none;
@@ -97,8 +88,13 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKeydown));
       background: var(--bg-primary-hover);
     }
 
-    &.active svg {
+    &.active svg,
+    &.active span {
       color: var(--text-accent);
+    }
+
+    span {
+      font: var(--light-14);
     }
   }
 
@@ -113,15 +109,18 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKeydown));
     min-width: 212px;
   }
 
-  .inactive svg {
+  .inactive svg,
+  .inactive .select-small__label {
     color: var(--icon-inactive);
   }
 
-  .medium svg {
+  .medium svg,
+  .medium .select-small__label {
     color: var(--medium);
   }
 
-  .high svg {
+  .high svg,
+  .high .select-small__label {
     color: var(--text-error);
   }
 }

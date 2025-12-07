@@ -3,7 +3,7 @@ import {TaskPriority} from "@/types/task";
 
 const PRIORITIES: SelectSmallOption<TaskPriority | null>[] = [
   {
-    value: null,
+    value: 'NONE',
     label: "No priority",
     icon: "flag",
     color: "inactive",

@@ -59,15 +59,15 @@ export const useTasksStore = defineStore('tasks', () => {
     await fetchTasks()
   }
 
-  const debounceMap = new Map<number, any>()
+  const toggleCompletedDebounceMap = new Map<number, any>()
 
   const toggleCompleteTask = (id: number, isCompleted: boolean) => {
-    if (debounceMap.has(id)) {
-      clearTimeout(debounceMap.get(id))
+    if (toggleCompletedDebounceMap.has(id)) {
+      clearTimeout(toggleCompletedDebounceMap.get(id))
     }
 
     const timeout = setTimeout(async () => {
-      debounceMap.delete(id) // Удаляем по завершении
+      toggleCompletedDebounceMap.delete(id) // Удаляем по завершении
 
       await fetch(`${BASE_API_URL}/tasks/${id}/`, {
         method: 'PUT',
@@ -78,13 +78,29 @@ export const useTasksStore = defineStore('tasks', () => {
         },
         body: JSON.stringify({ completed: isCompleted })
       })
+
+      await fetchTasks()
     }, 400)
 
-    debounceMap.set(id, timeout)
+    toggleCompletedDebounceMap.set(id, timeout)
   }
 
   const getTaskById = (id: number) => {
     return tasks.value.find(task => task.id === id)
+  }
+
+  const updateTask = async (task: Task) => {
+    await fetch(`${BASE_API_URL}/tasks/${task.id}/`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        'Authorization': `JWT ${authStore.getAccessToken()}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(task)
+    })
+
+    await fetchTasks()
   }
 
   return {
@@ -94,6 +110,7 @@ export const useTasksStore = defineStore('tasks', () => {
     createTask,
     deleteTask,
     getTaskById,
-    toggleCompleteTask
+    toggleCompleteTask,
+    updateTask,
   }
 })
