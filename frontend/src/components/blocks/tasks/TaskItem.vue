@@ -18,7 +18,7 @@ const dueDate = computed(() => {
 })
 
 const tasksStore = useTasksStore()
-const isCompleted = ref<Boolean>(props.task.completed)
+const isCompleted = ref<boolean>(props.task.completed)
 
 watch(() => isCompleted.value, (newValue) => {
   tasksStore.toggleCompleteTask(props.task.id, newValue)
@@ -34,6 +34,7 @@ watch(() => props.task, (newValue) => {
     <TaskCheckbox class="task-item__checkbox"
                   :priority="task.priority.toLowerCase()"
                   v-model="isCompleted"
+                  @click.stop
     />
     <span class="task-item__category" v-if="task.category">{{ task.category.name }}</span>
     <span class="task-item__title">{{ task.title }}</span>

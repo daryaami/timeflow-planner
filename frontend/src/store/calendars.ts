@@ -1,9 +1,10 @@
 import {ref} from "vue";
 import {useAuthStore} from "@/store/auth";
 import {BASE_API_URL} from "@/config";
+import {Calendar} from "@/types/calendar";
 
 export const useCalendarsStore = () => {
-  const calendars = ref()
+  const calendars = ref<Calendar[]>([])
 
   const fetchCalendars = async () => {
     const authStore = useAuthStore();
@@ -22,14 +23,16 @@ export const useCalendarsStore = () => {
   }
 
   const getCalendars = async () => {
-    if (!calendars.value) {
+
+
+    if (!calendars.value.length) {
       await fetchCalendars();
     }
 
     return calendars.value
   }
 
-  const getCalendarById = async (id) => {
+  const getCalendarById = async (id: number) => {
     if (!calendars.value) {
       await fetchCalendars();
     }

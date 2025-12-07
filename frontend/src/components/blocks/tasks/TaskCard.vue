@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { Task } from "@/types/task";
-import { ref, watch } from "vue";
+import {computed, onMounted, ref, watch} from "vue";
 import { useTasksStore } from "@/store/tasks";
 import CustomDatePicker from "@/components/blocks/form/CustomDatePicker.vue";
 import {PRIORITIES} from "@/constants/tasks";
 import SelectSmall from "@/components/blocks/form/SelectSmall.vue";
 import TaskCheckbox from "@/components/blocks/form/TaskCheckbox.vue";
+import SelectDefault from "@/components/blocks/form/SelectDefault.vue";
+import {useCalendarsStore} from "@/store/calendars";
+import {Calendar} from "@/types/calendar";
 
 const taskStore = useTasksStore();
 
@@ -60,6 +63,35 @@ watch(
 
 watch(() => taskCopy.value.priority, () => updateTask(taskCopy.value))
 watch(() => taskCopy.value.completed, () => updateTask(taskCopy.value))
+
+
+// Calendars
+const calendarsStore = useCalendarsStore()
+const calendars = ref<Calendar[]>([])
+
+onMounted(async ()=> {
+  calendars.value = await calendarsStore.getCalendars()
+})
+
+const calendarsOptions = computed(() => {
+  return calendars.value.map(c => {
+    return {
+      value: c.id.toString(),
+      label: c.summary,
+      icon: 'calendar-color',
+      color: c.background_color
+    }
+  })
+})
+
+const userCalendarIdModel = computed({
+  get: () => taskCopy.value.user_calendar_id?.toString() ?? null,
+  set: (value: string) => {
+    taskCopy.value.user_calendar_id = Number(value);
+    updateTask(taskCopy.value);
+  }
+});
+
 </script>
 
 <template>
@@ -85,6 +117,10 @@ watch(() => taskCopy.value.completed, () => updateTask(taskCopy.value))
       >
     </div>
 
+    <SelectDefault v-model="userCalendarIdModel"
+                   :options="calendarsOptions"
+                   icon="calendar-color"
+    />
   </form>
 </template>
 
@@ -115,6 +151,8 @@ watch(() => taskCopy.value.completed, () => updateTask(taskCopy.value))
     display: flex;
     align-items: center;
     gap: 8px;
+
+    margin-bottom: 24px;
   }
 
   &__title {

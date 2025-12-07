@@ -1,17 +1,29 @@
 <script setup lang="ts">
-withDefaults(defineProps<{
+import {computed} from "vue";
+
+const props = withDefaults(defineProps<{
   tag?: 'button' | 'a',
   text: string,
   leftIcon?: string,
   rightIcon?: string,
+  color?: string
 }>(), {
   tag: 'button'
+})
+
+const computedIconColor = computed(() => {
+  if (!props.color) return null
+
+  return `color: ${props.color}`
 })
 </script>
 
 <template>
   <component :is="tag" class="nav-link">
-    <svg v-if="leftIcon" width="18" height="18">
+    <svg v-if="leftIcon" width="18" height="18"
+         :style="computedIconColor"
+
+    >
       <use :href="`#${leftIcon}`"></use>
     </svg>
 

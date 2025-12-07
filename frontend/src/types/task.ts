@@ -13,9 +13,9 @@ export interface Task {
   id: number;                // readOnly
   title: string;             // max 255
   priority: TaskPriority;
-  category?: number | null;  // x-nullable
+  category_id: number;  // x-nullable
   due_date?: string | null;  // ISO, x-nullable
-  calendar: number;
+  user_calendar_id: number;
   completed: boolean;
   created_at: string;        // readOnly
   updated_at: string;        // readOnly
@@ -33,9 +33,9 @@ export type UiTask = WithEl<Task>;
 export interface TaskCreate {
   title: string;
   priority?: TaskPriority;
-  category_id?: number;
+  category_id: number;
   due_date?: string;
-  calendar?: number;
+  user_calendar_id?: number;
   duration?: number;
   notes?:string,
   completed?: boolean,
