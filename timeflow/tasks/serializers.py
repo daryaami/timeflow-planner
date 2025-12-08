@@ -37,7 +37,8 @@ class TaskSerializer(serializers.ModelSerializer):
     category_id = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(),
         source='category',
-        required=False
+        required=False,
+        allow_null=True
     )
 
     class Meta:
