@@ -106,7 +106,6 @@ const toggleActiveOption = (option: SelectSmallOption) => {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    min-width: 212px;
   }
 
   .inactive svg,

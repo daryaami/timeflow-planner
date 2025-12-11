@@ -2,9 +2,11 @@
 import {Task} from "@/types/task";
 import IconBtn from "@/components/ui-kit/IconBtn.vue";
 import {useTasksStore} from "@/store/tasks";
-import {ref, computed, watch} from "vue";
+import {ref, computed, watch, onMounted} from "vue";
 import {formatDueDate} from "@/components/js/time-utils";
 import TaskCheckbox from "@/components/blocks/form/TaskCheckbox.vue";
+import {useCategoriesStore} from "@/store/categories";
+import {Category} from "@/types/category";
 
 const props = defineProps<{ task: Task }>()
 
@@ -27,6 +29,23 @@ watch(() => isCompleted.value, (newValue) => {
 watch(() => props.task, (newValue) => {
   isCompleted.value = newValue.completed
 })
+
+
+const categoriesStore = useCategoriesStore()
+const categories = ref<Category[]>([])
+
+onMounted(async () => {
+  categories.value = await categoriesStore.getCategories()
+})
+
+const categoryName = computed(() => {
+  const id = props.task.category_id
+  if (!id) return null
+
+  const category = categories.value.find(c => c.id === id)
+  return category ? category.name : null
+})
+
 </script>
 
 <template>
@@ -36,7 +55,7 @@ watch(() => props.task, (newValue) => {
                   v-model="isCompleted"
                   @click.stop
     />
-    <span class="task-item__category" v-if="task.category">{{ task.category.name }}</span>
+    <span class="task-item__category" v-if="categoryName">{{ categoryName }}</span>
     <span class="task-item__title">{{ task.title }}</span>
     <span class="task-item__due" v-if="dueDate">{{ dueDate }}</span>
     <IconBtn

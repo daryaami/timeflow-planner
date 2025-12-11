@@ -9,6 +9,8 @@ import TaskCheckbox from "@/components/blocks/form/TaskCheckbox.vue";
 import SelectDefault from "@/components/blocks/form/SelectDefault.vue";
 import {useCalendarsStore} from "@/store/calendars";
 import {Calendar} from "@/types/calendar";
+import {useCategoriesStore} from "@/store/categories";
+import {Category} from "@/types/category";
 
 const taskStore = useTasksStore();
 
@@ -92,6 +94,39 @@ const userCalendarIdModel = computed({
   }
 });
 
+// Categories
+const categoriesStore = useCategoriesStore()
+const categories = ref<Category[]>([])
+
+const categoriesOptions = computed(() => {
+  const options = categories.value.map((c) => {
+    return {
+      value: c.id.toString(),
+      label: c.name
+    }
+  })
+
+  return [
+    {
+      value: null,
+      label: 'Not selected'
+    },
+    ...options
+  ]
+})
+
+onMounted(async ()=> {
+  categories.value = await categoriesStore.getCategories()
+})
+
+const userCategoryIdModel = computed({
+  get: () => taskCopy.value.category_id?.toString() ?? null,
+  set: (value: string | null) => {
+    taskCopy.value.category_id = typeof(value) === 'string'? Number(value): null
+    updateTask(taskCopy.value);
+  }
+})
+
 </script>
 
 <template>
@@ -120,6 +155,11 @@ const userCalendarIdModel = computed({
     <SelectDefault v-model="userCalendarIdModel"
                    :options="calendarsOptions"
                    icon="calendar-color"
+    />
+
+    <SelectDefault v-model="userCategoryIdModel"
+                   :options="categoriesOptions"
+                   icon="tag"
     />
   </form>
 </template>
@@ -160,6 +200,9 @@ const userCalendarIdModel = computed({
     background: transparent;
     border: none;
     outline: none;
+
+    width: 100%;
+
     font: var(--bold-18);
     color: var(--text-primary);
   }

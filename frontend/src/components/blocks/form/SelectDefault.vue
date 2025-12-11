@@ -5,7 +5,7 @@ import {useDropdown} from "@/components/composables/useDropdown";
 import NavLink from "@/components/ui-kit/NavLink.vue";
 
 interface SelectDefaultOption {
-  value: string,
+  value: string | null,
   icon?: string,
   color?: string,
   label: string
@@ -25,7 +25,6 @@ const { isOpen, toggle, close } = useDropdown(rootEl);
 
 
 const activeOption = computed(() => {
-  if (!modelValue.value) return null;
   return props.options.find(o => o.value === modelValue.value) || null
 });
 
@@ -60,10 +59,11 @@ const computedIconColor = computed(() => {
     </button>
 
     <Dropdown class="select-default__dropdown" v-if="isOpen">
-      <NavLink v-for="o in options" type="button"
-               :key="o.value"
+      <NavLink v-for="(o, i) in options" type="button"
+               :key="i"
                :text="o.label"
                :leftIcon="o.icon || undefined"
+               :rightIcon="o.value === activeOption?.value ? 'check-active' : undefined"
                :color="o.color || undefined"
                @click.stop="toggleActiveOption(o)"
       />
@@ -76,6 +76,7 @@ const computedIconColor = computed(() => {
 
 .select-default {
   width: fit-content;
+  position: relative;
 
   &__button {
     display: flex;
@@ -100,11 +101,18 @@ const computedIconColor = computed(() => {
   }
 
   &__chevron {
-    transition: .3s;
+    transition: .15s;
 
     &.rotated {
       transform: rotate(180deg) ;
     }
+  }
+
+  &__dropdown {
+    position: absolute;
+    left: 0;
+    top: calc(100% + 4px);
+    z-index: 10;
   }
 }
 </style>
