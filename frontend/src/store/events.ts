@@ -73,7 +73,7 @@ export const useEventsStore = defineStore('events', () => {
       task_id: task.id,
       start: eventData.date.toISOString(),
       end: addMinutes(eventData.date, task.duration || 30).toISOString(),
-      calendar_id: task.calendar
+      calendar_id: task.user_calendar_id
     }
 
     const response = await fetch(`${BASE_API_URL}/events/from-task/`, {

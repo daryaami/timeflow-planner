@@ -74,6 +74,15 @@ const formatDueDate = (date: Date): string => {
   }
 }
 
+const toWeekDayAndDate = (date: Date): string => {
+  // Thu, 8 Aug
+
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }).format(date);
+}
 
 export {
   getStartOfMonth,
@@ -83,5 +92,6 @@ export {
   getTomorrow,
   getCurrentWeekMonday,
   addMinutes,
-  formatDueDate
+  formatDueDate,
+  toWeekDayAndDate
 };

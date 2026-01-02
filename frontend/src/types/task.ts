@@ -13,7 +13,7 @@ export interface Task {
   id: number;                // readOnly
   title: string;             // max 255
   priority: TaskPriority;
-  category_id: number;  // x-nullable
+  category_id: number | null;  // x-nullable
   due_date?: string | null;  // ISO, x-nullable
   user_calendar_id: number;
   completed: boolean;

@@ -67,6 +67,11 @@ withDefaults(defineProps<{
     height: 16px;
   }
 
+  &--xxs {
+    width: 12px;
+    height: 12px;
+  }
+
   &--accent {
     color: var(--icon-hover);
   }

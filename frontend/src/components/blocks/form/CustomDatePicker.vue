@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import VueDatePicker from "@vuepic/vue-datepicker";
 import { computed } from "vue";
+import {toWeekDayAndDate} from "@/components/js/time-utils";
 
 const props = defineProps<{
   modelValue: Date | string | null;
@@ -22,17 +23,9 @@ const value = computed({
   set: (val) => emit("update:modelValue", val),
 });
 
-function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  }).format(date);
-}
-
 const displayValue = computed(() => {
   if (!value.value) return "Due";
-  return formatDate(value.value);
+  return toWeekDayAndDate(value.value);
 });
 </script>
 

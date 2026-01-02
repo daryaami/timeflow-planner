@@ -1,1 +1,1 @@
-export type UISize = 'l' | 'm' | 's' | 'xs';
+export type UISize = 'l' | 'm' | 's' | 'xs' | 'xxs';

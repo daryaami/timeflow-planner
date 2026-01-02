@@ -11,6 +11,8 @@ import {useCalendarsStore} from "@/store/calendars";
 import {Calendar} from "@/types/calendar";
 import {useCategoriesStore} from "@/store/categories";
 import {Category} from "@/types/category";
+import DurationInput from "@/components/blocks/form/DurationInput.vue";
+import TimeLogCard from "@/components/blocks/tasks/TimeLogCard.vue";
 
 const taskStore = useTasksStore();
 
@@ -152,15 +154,37 @@ const userCategoryIdModel = computed({
       >
     </div>
 
-    <SelectDefault v-model="userCalendarIdModel"
-                   :options="calendarsOptions"
-                   icon="calendar-color"
-    />
+    <div class="task-card__inputs">
+      <SelectDefault v-model="userCalendarIdModel"
+                     :options="calendarsOptions"
+                     icon="calendar-color"
+      />
 
-    <SelectDefault v-model="userCategoryIdModel"
-                   :options="categoriesOptions"
-                   icon="tag"
-    />
+      <SelectDefault v-model="userCategoryIdModel"
+                     :options="categoriesOptions"
+                     icon="tag"
+      />
+
+      <DurationInput v-model="taskCopy.duration"/>
+
+      <div class="scheduled">
+        <div class="scheduled__title-wrapper">
+          <svg width="18" height="18">
+            <use href="#alarm-2"></use>
+          </svg>
+          <span class="scheduled__title">Scheduled</span>
+        </div>
+
+        <p class="scheduled__no-events"
+           v-if="!taskCopy.time_logs.length">No upcoming events</p>
+
+        <div class="scheduled__time-logs" v-else>
+          <TimeLogCard v-for="timeLog in taskCopy.time_logs" :key="timeLog.id" :time-log="timeLog" />
+        </div>
+
+
+      </div>
+    </div>
   </form>
 </template>
 
@@ -205,6 +229,51 @@ const userCategoryIdModel = computed({
 
     font: var(--bold-18);
     color: var(--text-primary);
+  }
+
+  &__inputs {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
+
+.scheduled {
+  width: 100%;
+
+  &__title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    padding: 6px 4px;
+    margin-bottom: 12px;
+
+    & svg {
+      display: block;
+    }
+  }
+
+  &__title {
+    font: var(--bold-14);
+    color: var(--text-primary);
+    display: block;
+  }
+
+  &__no-events {
+    margin: 0;
+    padding-left: 4px;
+
+    font: var(--light-14);
+    color: var(--text-primary-disabled);
+  }
+
+  &__time-logs {
+    display: grid;
+    grid-template-columns: min-content 1fr min-content;
+    width: 100%;
+    row-gap: 6px;
   }
 }
 </style>
