@@ -5,6 +5,7 @@ import {onMounted} from "vue";
 import { Draggable } from '@fullcalendar/interaction';
 import TaskItem from "@/components/blocks/tasks/TaskItem.vue";
 import {Task, UiTask} from "@/types/task";
+import TaskAddInput from "@/components/blocks/tasks/TaskAddInput.vue";
 
 const tasksStore = useTasksStore()
 
@@ -57,14 +58,15 @@ const setTaskEl = (el: Element | ComponentPublicInstance | null, task: UiTask) =
 </script>
 
 <template>
-  <div class="aside-tasks" v-if="tasks && tasks.length">
+  <div class="aside-tasks">
     <div class="aside-tasks__title-wrapper">
       <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg">
         <use href="#bulb"></use>
       </svg>
       <h2 class="aside-tasks__title">Plan now</h2>
-      <span class="aside-tasks__counter" v-if="tasksStore.tasks.length">{{ tasksStore.tasks.length }}</span>
+      <span class="aside-tasks__counter" v-if="tasksStore.tasks.length">{{ tasksStore.tasks.length? tasksStore.tasks.length: '' }}</span>
     </div>
+    <TaskAddInput />
     <TransitionGroup name="list" tag="div" class="aside-tasks__list">
       <div
           v-for="task in tasks"
@@ -136,6 +138,8 @@ const setTaskEl = (el: Element | ComponentPublicInstance | null, task: UiTask) =
     flex-direction: column;
     gap: 8px;
     position: relative;
+
+    margin-top: 16px;
 
     & .task-item {
       width: 100%;

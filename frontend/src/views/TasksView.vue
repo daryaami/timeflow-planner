@@ -16,7 +16,11 @@ watch(
   () => {
     if (!activeTask.value) return
     const updated = taskStore.tasks.find(t => t.id === activeTask.value!.id)
-    if (updated) activeTask.value = { ...updated }
+    if (updated) {
+      activeTask.value = { ...updated }
+    } else {
+      activeTask.value = null
+    }
   },
   { deep: true }
 )
@@ -35,7 +39,9 @@ watch(
       />
     </div>
     <div v-if="activeTask">
-      <TaskCard :task="activeTask" />
+      <TaskCard :task="activeTask"
+                @close="activeTask = null"
+      />
     </div>
   </div>
 </template>

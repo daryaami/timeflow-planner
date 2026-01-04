@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import FullCalendar from '@fullcalendar/vue3'
 import timeGridPlugin from '@fullcalendar/timegrid'
-import interactionPlugin from '@fullcalendar/interaction';
+import interactionPlugin, {EventDragStopArg} from '@fullcalendar/interaction';
 import type { Calendar, CalendarOptions } from '@fullcalendar/core';
 
 // components
@@ -12,7 +12,6 @@ import LoaderVue from '../components/blocks/loaders/Loader.vue';
 // store
 import {useEventsStore} from "@/store/events";
 import {getEndOfMonth, getStartOfMonth} from "@/components/js/time-utils";
-import CreateTaskPopup from "@/components/blocks/planner/CreateTaskPopup.vue";
 import AsideTasksList from "@/components/blocks/tasks/AsideTasksList.vue";
 
 const isLoading = ref<boolean>(true);
@@ -23,6 +22,16 @@ const calendarApi = ref<Calendar | null>(null);
 const eventsStore = useEventsStore()
 
 const currentDate = ref<Date | null>(null)
+
+const updateEventTimeFromCalendar = (info: EventDragStopArg) => {
+  const id = info.event.id
+  const start = info.event.start?.toISOString()
+  const end = info.event.end?.toISOString()
+
+  if (id && start && end) {
+    eventsStore.updateEventTime(id, start, end)
+  }
+}
 
 const calendarOptions: CalendarOptions = {
   plugins: [timeGridPlugin, interactionPlugin],
@@ -39,7 +48,10 @@ const calendarOptions: CalendarOptions = {
   // slotDuration: '00:15:00',
   height: '100%',
   dayHeaderContent: (data) => {
-    return {html: `<div class="planner__weekday">${data.text.split(' ')[1]}</div><div class="planner__day">${data.text.split(' ')[0]}</div>` }
+    return {
+      html: `<div class="planner__weekday">${data.text.split(' ')[1]}</div>
+             <div class="planner__day">${data.text.split(' ')[0]}</div>`
+    }
   },
   slotLabelContent: (data) => {
     return `${data.date.getHours()}:00`
@@ -55,13 +67,11 @@ const calendarOptions: CalendarOptions = {
     calendarApi.value?.addEventSource(events);
     isLoading.value = false;
   },
-  eventDragStop: (info) => {
-    console.log(info.event)
-    eventsStore.updateEventStart(info.event.id, info.event.start.toISOString())
-  },
+  eventDragStop: updateEventTimeFromCalendar,
   drop: (dropInfo) => {
     eventsStore.createEvent(dropInfo)
-  }
+  },
+  eventResizeStop: updateEventTimeFromCalendar
 }
 
 onMounted(async () => {
@@ -98,10 +108,9 @@ onMounted(async () => {
 
       <div class="planner__calendar-wrapper">
         <FullCalendar :options="calendarOptions" ref="calendarInstance"/>
-        <CreateTaskPopup />
       </div>
   </div>
-    <AsideTasksList />
+  <AsideTasksList />
 </div>
 
 

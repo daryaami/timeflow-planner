@@ -17,12 +17,12 @@ export const useEventsStore = defineStore('events', () => {
   const adaptEventToFullCalendar = (event: any): EventInput => {
     return {
       id: event.id,
-      title: event.summary,
+      title: event.summary || "No title",
       start: event.start.dateTime,
       end: event.end?.dateTime,
-      url: event.htmlLink,
       backgroundColor: event.color,
       borderColor: event.color,
+      user_calendar_id: event.user_calendar_id
     }
   }
 
@@ -73,7 +73,7 @@ export const useEventsStore = defineStore('events', () => {
       task_id: task.id,
       start: eventData.date.toISOString(),
       end: addMinutes(eventData.date, task.duration || 30).toISOString(),
-      calendar_id: task.user_calendar_id
+      user_calendar_id: task.user_calendar_id
     }
 
     const response = await fetch(`${BASE_API_URL}/events/from-task/`, {
@@ -92,15 +92,25 @@ export const useEventsStore = defineStore('events', () => {
     }
   }
 
-  const debounceMap = new Map<number, any>()
+  const getCalendarId = (eventId: string): number | undefined => {
+    const event = events.value.find(event => event.id === eventId)
 
-  const updateEventStart = (id: number, newStart: string) => {
+    return event?.user_calendar_id? event.user_calendar_id : undefined
+  }
+
+  const debounceMap = new Map<string, any>()
+
+  const updateEventTime = (id: string, newStart: string, newEnd: string) => {
     if (debounceMap.has(id)) {
       clearTimeout(debounceMap.get(id))
     }
 
     const timeout = setTimeout(async () => {
       debounceMap.delete(id) // Удаляем по завершении
+
+      const calendarId = getCalendarId(id)
+      console.log(calendarId)
+      if (!calendarId) return
 
       await fetch(`${BASE_API_URL}/events/`, {
         method: 'PUT',
@@ -111,7 +121,13 @@ export const useEventsStore = defineStore('events', () => {
         },
         body: JSON.stringify({
           event_id: id,
-          start: newStart
+          start: {
+            dateTime: newStart,
+          },
+          end: {
+            dateTime: newEnd,
+          },
+          user_calendar_id: calendarId
         })
       })
     }, 400)
@@ -123,6 +139,6 @@ export const useEventsStore = defineStore('events', () => {
     events,
     getEvents,
     createEvent,
-    updateEventStart
+    updateEventTime
   }
 })

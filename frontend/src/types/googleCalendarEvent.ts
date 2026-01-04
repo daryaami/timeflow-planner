@@ -11,5 +11,5 @@ export interface GoogleCalendarEvent {
   end: {
     [key: string]: string | null;
   };
-  calendar: string;        // id календаря
+  user_calendar_id: number;        // id календаря
 }

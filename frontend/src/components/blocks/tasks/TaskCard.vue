@@ -13,12 +13,17 @@ import {useCategoriesStore} from "@/store/categories";
 import {Category} from "@/types/category";
 import DurationInput from "@/components/blocks/form/DurationInput.vue";
 import TimeLogCard from "@/components/blocks/tasks/TimeLogCard.vue";
+import IconBtn from "@/components/ui-kit/IconBtn.vue";
 
 const taskStore = useTasksStore();
 
 const props = defineProps<{
   task: Task;
 }>();
+
+const emit = defineEmits<{
+  (e: 'close'): void
+}>()
 
 // локальный тип с датой в виде объекта
 type EditableTask = Omit<Task, "due_date"> & {
@@ -141,6 +146,12 @@ const userCategoryIdModel = computed({
                    icon="flag"
                    :with-label="true"
       />
+
+      <IconBtn class="task-card__close"
+               icon="cross"
+               type="button"
+               @click="emit('close')"
+      />
     </div>
 
     <div class="task-card__title-wrapper">
@@ -203,6 +214,10 @@ const userCategoryIdModel = computed({
     gap: 8px;
 
     margin-bottom: 24px;
+  }
+
+  &__close {
+    margin-left: auto;
   }
 
   &__header-divider {
