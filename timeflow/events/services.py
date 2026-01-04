@@ -47,7 +47,7 @@ class GoogleCalendarService:
             
             return [
             {
-                "calendar_id": calendar.get("id"),
+                "google_calendar_id": calendar.get("id"),
                 "summary": calendar.get("summary"),
                 "description": calendar.get("description", None),
                 "time_zone": calendar.get("timeZone", None),
@@ -78,18 +78,18 @@ class GoogleCalendarService:
         except CalendarSyncError as e:
             raise CalendarSyncError(f"Ошибка синхронизации календарей для пользователя {user}: {e}")
         
-    def toggle_calendar_select(self, user, calendar_id):
+    def toggle_calendar_select(self, user, google_calendar_id):
         """
         Переключает выбор календарей для пользователя.
         """
         try:
-            calendar = UserCalendar.objects.get(user=user, calendar_id=calendar_id)
+            calendar = UserCalendar.objects.get(user=user, google_calendar_id=google_calendar_id)
             if calendar.primary and calendar.selected:
                 raise CalendarSyncError("Нельзя отключить основной календарь")
             calendar.selected = not calendar.selected
             calendar.save()
         except UserCalendar.DoesNotExist:
-            raise CalendarSyncError(f"Календарь {calendar_id} не найден")
+            raise CalendarSyncError(f"Календарь {google_calendar_id} не найден")
 
     def get_events_from_calendar(self, calendar, credentials, time_min, time_max):
         """
@@ -98,7 +98,7 @@ class GoogleCalendarService:
         try:
             access_token = credentials.token
             headers = self._get_headers(access_token)
-            url = self.CALENDAR_EVENTS_URL.format(calendar_id=calendar.calendar_id)
+            url = self.CALENDAR_EVENTS_URL.format(calendar_id=calendar.google_calendar_id)
             params = {
                 "timeMin": time_min,
                 "timeMax": time_max,
@@ -112,9 +112,9 @@ class GoogleCalendarService:
 
             return response.json()
         except GoogleNetworkError as e:
-            raise GoogleNetworkError(f"Ошибка при получении событий из календаря {calendar.calendar_id}: {str(e)}")
+            raise GoogleNetworkError(f"Ошибка при получении событий из календаря {calendar.google_calendar_id}: {str(e)}")
         except Exception as e:
-            raise CalendarSyncError(f"Неизвестная ошибка при получении событий из календаря {calendar.calendar_id}: {str(e)}")
+            raise CalendarSyncError(f"Неизвестная ошибка при получении событий из календаря {calendar.google_calendar_id}: {str(e)}")
 
     def get_all_events(self, user, time_min, time_max):
         """
@@ -129,7 +129,7 @@ class GoogleCalendarService:
                 calendar_events = self.get_events_from_calendar(calendar, credentials, time_min, time_max)
                 raw_events = calendar_events.get("items", [])
                 for event in raw_events:
-                    event['calendar'] = calendar.calendar_id
+                    event['user_calendar_id'] = calendar.id
                     serializer = GoogleCalendarEventSerializer(data=event)
                     if serializer.is_valid():
                         events_list.append(serializer.data)
@@ -137,39 +137,42 @@ class GoogleCalendarService:
                         logger.error("Failed to serialize event: %s", event, serializer.errors)
 
             except Exception as e:
-                logger.error("Failed to get events from calendar %s: %s", calendar.calendar_id, str(e))
+                logger.error("Failed to get events from calendar %s: %s", calendar.google_calendar_id, str(e))
 
         return events_list
     
-    def create_event(self, user, calendar_id, event_data):
+    def create_event(self, user, google_calendar_id, event_data):
         """
         Создает событие в календаре пользователя.
+        :param google_calendar_id: Google calendar ID (строка)
         """
         try:
             service = self._build_google_service(user)
-            event = service.events().insert(calendarId=calendar_id, body=event_data).execute()
+            event = service.events().insert(calendarId=google_calendar_id, body=event_data).execute()
             return event
         except HttpError as e:
             raise EventNotFoundError(f"Ошибка при создании события: {str(e)}")
         
-    def update_event(self, user, calendar_id, event_id, event_data):
+    def update_event(self, user, google_calendar_id, event_id, event_data):
         """
         Обновляет существующее событие в календаре пользователя.
+        :param google_calendar_id: Google calendar ID (строка)
         """
         try:
             service = self._build_google_service(user)
-            event = service.events().update(calendarId=calendar_id, eventId=event_id, body=event_data).execute()
+            event = service.events().update(calendarId=google_calendar_id, eventId=event_id, body=event_data).execute()
             return event
         except HttpError as e:
             raise EventNotFoundError(f"Ошибка при обновлении события: {str(e)}")
         
-    def delete_event(self, user, calendar_id, event_id):
+    def delete_event(self, user, google_calendar_id, event_id):
         """
         Удаляет событие из календаря пользователя.
+        :param google_calendar_id: Google calendar ID (строка)
         """
         try:
             service = self._build_google_service(user)
-            service.events().delete(calendarId=calendar_id, eventId=event_id).execute()
+            service.events().delete(calendarId=google_calendar_id, eventId=event_id).execute()
         except HttpError as e:
             raise EventNotFoundError(f"Ошибка при удалении события: {str(e)}")
 

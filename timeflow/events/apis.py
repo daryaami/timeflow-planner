@@ -70,20 +70,21 @@ class UserCalendarEventsApi(APIView):
     )
     def post(self, request, *args, **kwargs):
         '''Создать новое событие в календаре пользователя'''
-        # calendar_id = request.data.get('calendar_id')
+        # user_calendar_id = request.data.get('user_calendar_id')
         # event_data = request.data.get('event_data')
 
         serializer = GoogleCalendarEventCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        calendar_id = serializer.validated_data.pop("calendar_id")
+        user_calendar_id = serializer.validated_data.pop("user_calendar_id")
         event_data = serializer.validated_data
 
-        # if not calendar_id or not event_data:
-        #     return Response({"error": "Параметры calendar_id и event_data обязательны"}, status=status.HTTP_400_BAD_REQUEST)
+        # Получаем объект UserCalendar по ID из базы данных
+        user_calendar = get_object_or_404(UserCalendar, id=user_calendar_id, user=request.user)
+        google_calendar_id = user_calendar.google_calendar_id
 
         calendar_service = GoogleCalendarService()
-        event = calendar_service.create_event(request.user, calendar_id, event_data)
+        event = calendar_service.create_event(request.user, google_calendar_id, event_data)
         
         response_serializer = GoogleCalendarEventSerializer(event)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
@@ -102,19 +103,16 @@ class UserCalendarEventsApi(APIView):
         serializer = GoogleCalendarEventUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # calendar_id = request.data.get('calendar_id')
-        # event_id = request.data.get('event_id')
-        # event_data = request.data.get('event_data')
-
-        calendar_id = serializer.validated_data.pop("calendar_id")
+        user_calendar_id = serializer.validated_data.pop("user_calendar_id")
         event_id = serializer.validated_data.pop("event_id")
         event_data = serializer.validated_data
 
-        # if not calendar_id or not event_id or not event_data:
-        #     return Response({"error": "Параметры calendar_id, event_id и event_data обязательны"}, status=status.HTTP_400_BAD_REQUEST)
+        # Получаем объект UserCalendar по ID из базы данных
+        user_calendar = get_object_or_404(UserCalendar, id=user_calendar_id, user=request.user)
+        google_calendar_id = user_calendar.google_calendar_id
 
         calendar_service = GoogleCalendarService()
-        event = calendar_service.update_event(request.user, calendar_id, event_id, event_data)
+        event = calendar_service.update_event(request.user, google_calendar_id, event_id, event_data)
 
         response_serializer = GoogleCalendarEventSerializer(event)
         return Response(response_serializer.data, status=status.HTTP_200_OK)
@@ -128,20 +126,21 @@ class UserCalendarEventsApi(APIView):
         }
     )
     def delete(self, request, *args, **kwargs):
-        # calendar_id = request.data.get('calendar_id')
+        # user_calendar_id = request.data.get('user_calendar_id')
         # event_id = request.data.get('event_id')
 
         serializer = GoogleCalendarEventDeleteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        calendar_id = serializer.validated_data["calendar_id"]
+        user_calendar_id = serializer.validated_data["user_calendar_id"]
         event_id = serializer.validated_data["event_id"]
 
-        # if not calendar_id or not event_id:
-        #     return Response({"error": "Параметры calendar_id и event_id обязательны"}, status=status.HTTP_400_BAD_REQUEST)
+        # Получаем объект UserCalendar по ID из базы данных
+        user_calendar = get_object_or_404(UserCalendar, id=user_calendar_id, user=request.user)
+        google_calendar_id = user_calendar.google_calendar_id
 
         calendar_service = GoogleCalendarService()
-        calendar_service.delete_event(request.user, calendar_id, event_id)
+        calendar_service.delete_event(request.user, google_calendar_id, event_id)
         
         return Response({"success": "Событие успешно удалено"}, status=status.HTTP_204_NO_CONTENT)
 
@@ -201,7 +200,7 @@ class ToggleUserCalendarSelectApi(APIView):
     @swagger_auto_schema(    
         operation_description="Переключить активный календарь пользователя",
         manual_parameters=[
-            openapi.Parameter('calendar_id', openapi.IN_QUERY, description='ID календаря', type=openapi.TYPE_STRING)
+            openapi.Parameter('google_calendar_id', openapi.IN_QUERY, description='Google calendar ID (строка)', type=openapi.TYPE_STRING)
         ],
         responses={
             200: openapi.Response('Календарь успешно переключен', examples={
@@ -210,9 +209,9 @@ class ToggleUserCalendarSelectApi(APIView):
         }
     )
     def post(self, request, *args, **kwargs):
-        calendar_id = request.data.get('calendar_id')
+        google_calendar_id = request.data.get('google_calendar_id')
         calendar_service = GoogleCalendarService()
-        calendar_service.toggle_calendar_select(request.user, calendar_id)
+        calendar_service.toggle_calendar_select(request.user, google_calendar_id)
         return Response({"success": "Календарь успешно переключен"}, status=status.HTTP_200_OK)
     
     
@@ -223,7 +222,7 @@ class EventFromTaskApi(APIView):
         operation_description="Создать событие и timelog на основе задачи",
         manual_parameters=[
             openapi.Parameter('task_id', openapi.IN_QUERY, description="ID задачи", type=openapi.TYPE_INTEGER),
-            openapi.Parameter('calendar_id', openapi.IN_QUERY, description="ID календаря", type=openapi.TYPE_INTEGER),
+            openapi.Parameter('user_calendar_id', openapi.IN_QUERY, description="ID календаря из базы данных", type=openapi.TYPE_INTEGER),
             openapi.Parameter('start', openapi.IN_QUERY, description="Дата начала (%Y-%m-%d)", type=openapi.TYPE_STRING),
             openapi.Parameter('end', openapi.IN_QUERY, description="Дата окончания (%Y-%m-%d)", type=openapi.TYPE_STRING),
         ],
@@ -242,7 +241,7 @@ class EventFromTaskApi(APIView):
         validated = serializer.validated_data
 
         task = get_object_or_404(Task, id=validated['task_id'], user=request.user)
-        user_calendar = get_object_or_404(UserCalendar, id=validated['calendar_id'], user=request.user)
+        user_calendar = get_object_or_404(UserCalendar, id=validated['user_calendar_id'], user=request.user)
 
         event_data = {
             "summary": task.title,
@@ -256,7 +255,7 @@ class EventFromTaskApi(APIView):
         try:
             calendar_event = gcal_service.create_event(
                 user=request.user,
-                calendar_id=user_calendar.calendar_id,
+                google_calendar_id=user_calendar.google_calendar_id,
                 event_data=event_data
             )
         except Exception as e:
@@ -303,10 +302,12 @@ class EventFromTaskApi(APIView):
         gcal_service = GoogleCalendarService()
 
         try:
-            user_calendar = get_object_or_404(UserCalendar, id=validated["calendar_id"], user=request.user)
+            user_calendar = get_object_or_404(UserCalendar, id=validated["user_calendar_id"], user=request.user)
         except Exception as e:
             return Response({"error": f"Календарь не найден: {str(e)}"},
                             status=status.HTTP_404_NOT_FOUND)
+
+        google_calendar_id = user_calendar.google_calendar_id
 
         event_data = {
             "start": {"dateTime": validated["start"].isoformat()},
@@ -327,7 +328,7 @@ class EventFromTaskApi(APIView):
             assert timelog.google_event_id == validated["event_id"], "event_id не совпадает с timelog.google_event_id"
             
             try:
-                calendar_event = gcal_service.update_event(request.user, user_calendar.calendar_id, timelog.google_event_id, event_data)
+                calendar_event = gcal_service.update_event(request.user, google_calendar_id, timelog.google_event_id, event_data)
             except Exception as e:
                 return Response({"error": f"Не удалось обновить событие в Google Calendar: {str(e)}"},
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -346,7 +347,7 @@ class EventFromTaskApi(APIView):
 
         else:
             try:
-                calendar_event = gcal_service.update_event(request.user, user_calendar.calendar_id, validated["event_id"], event_data)
+                calendar_event = gcal_service.update_event(request.user, google_calendar_id, validated["event_id"], event_data)
             except Exception as e:
                 return Response({"error": f"Не удалось обновить событие в Google Calendar: {str(e)}"},
                                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)

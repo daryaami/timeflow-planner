@@ -2,11 +2,13 @@ from rest_framework import serializers
 from .models import UserCalendar
 
 class UserCalendarSerializer(serializers.ModelSerializer):
+    google_calendar_id = serializers.CharField()
+    
     class Meta:
         model = UserCalendar
         fields = [
             'id',
-            'user', 'calendar_id', 'summary', 'description', 'owner',
+            'user', 'google_calendar_id', 'summary', 'description', 'owner',
             'background_color', 'selected', 'created_at', 'updated_at', 'time_zone', 'primary'
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
@@ -24,8 +26,9 @@ class GoogleCalendarEventSerializer(serializers.Serializer):
     end = serializers.DictField(required=False)
     # Можно сохранять email организатора как строку (если важен только email)
     organizer_email = serializers.SerializerMethodField()
-    calendar = serializers.CharField(required=False)
+    user_calendar_id = serializers.IntegerField(required=False, help_text="ID календаря из базы данных (UserCalendar.id)")
     description = serializers.CharField(required=False, allow_blank=True)
+    color = serializers.CharField(required=False, allow_null=True, help_text="Цвет календаря в формате HEX")
     
     extendedProperties = serializers.DictField(required=False)
 
@@ -38,8 +41,8 @@ class GoogleCalendarEventSerializer(serializers.Serializer):
     def to_representation(self, instance):
         """
         Здесь мы можем управлять видом итогового объекта:
-         - Извлечь значение dateTime из полей start и end,
-         - При необходимости преобразовать формат даты.
+        - Извлечь значение dateTime из полей start и end,
+        - При необходимости преобразовать формат даты.
         """
         representation = super().to_representation(instance)
         
@@ -53,10 +56,10 @@ class GoogleCalendarEventSerializer(serializers.Serializer):
         #         representation[time_field] = time_data
 
         # Выбираем цвет
-        calendar_id = instance.get("calendar") or instance.get("calendar_id")
-        if calendar_id:
+        user_calendar_id = instance.get("user_calendar_id") or instance.get("calendar")
+        if user_calendar_id:
             try:
-                calendar = UserCalendar.objects.get(calendar_id=calendar_id)
+                calendar = UserCalendar.objects.get(id=user_calendar_id)
                 representation["color"] = calendar.background_color
             except UserCalendar.DoesNotExist:
                 representation["color"] = None
@@ -68,7 +71,7 @@ class GoogleCalendarEventSerializer(serializers.Serializer):
 
 class GoogleCalendarEventCreateSerializer(serializers.Serializer):
     summary = serializers.CharField(required=True)  # название события
-    calendar_id = serializers.IntegerField(required=True)
+    user_calendar_id = serializers.IntegerField(required=True, help_text="ID календаря из базы данных (UserCalendar.id)")
     description = serializers.CharField(required=False, allow_blank=True)
 
     # start/end принимаем в виде словаря с ключом dateTime или date
@@ -91,17 +94,17 @@ class GoogleCalendarEventCreateSerializer(serializers.Serializer):
     
 class GoogleCalendarEventUpdateSerializer(GoogleCalendarEventCreateSerializer):
     event_id = serializers.CharField(required=True)
-    calendar_id = serializers.IntegerField(required=True)
+    user_calendar_id = serializers.IntegerField(required=True, help_text="ID календаря из базы данных (UserCalendar.id)")
     extendedProperties = serializers.DictField(required=False)
     summary = serializers.CharField(required=False)
 
 class GoogleCalendarEventDeleteSerializer(serializers.Serializer):
     event_id = serializers.CharField(required=True)
-    calendar_id = serializers.IntegerField(required=True)
+    user_calendar_id = serializers.IntegerField(required=True, help_text="ID календаря из базы данных (UserCalendar.id)")
 
 class EventFromTaskSerializer(serializers.Serializer):
     task_id = serializers.IntegerField(required=True)
-    calendar_id = serializers.IntegerField(required=True)
+    user_calendar_id = serializers.IntegerField(required=True, help_text="ID календаря из базы данных (UserCalendar.id)")
     start = serializers.DateTimeField(required=True)
     end = serializers.DateTimeField(required=True)
 
@@ -115,7 +118,7 @@ class EventFromTaskSerializer(serializers.Serializer):
 #     event_id = serializers.IntegerField(required=True)
 #     task_id = serializers.IntegerField(required=True)
 #     timelog_id = serializers.IntegerField(required=True)
-#     calendar_id = serializers.IntegerField(required=True)
+#     user_calendar_id = serializers.IntegerField(required=True)
     
 #     summary = serializers.CharField(required=False)
 #     start = serializers.DateTimeField(required=False)
