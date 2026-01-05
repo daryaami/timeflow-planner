@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import TaskHeader from "@/components/blocks/TaskHeader.vue";
+import TaskHeader from "@/components/blocks/tasks/TaskHeader.vue";
 import checklistIcon from "@/assets/img/checklist.svg";
 import TasksList from "@/components/blocks/tasks/TasksList.vue";
 import TaskAddInput from "@/components/blocks/tasks/TaskAddInput.vue";
