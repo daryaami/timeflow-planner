@@ -134,7 +134,6 @@ class UserCalendarEventsApi(APIView):
                     # Если timelog не найден — можно логировать и пропускать
                     timelog = None
 
-                print(timelog)
                 if timelog:
                     # Получаем новые даты из события
                     start_str = event['start'].get('dateTime') or event['start'].get('date')
@@ -154,10 +153,6 @@ class UserCalendarEventsApi(APIView):
 
                     if changed:
                         timelog.save(update_fields=['start_time', 'end_time'])
-
-                        print(timelog)
-
-                # TODO: дописать обновление сущности timelog
 
         response_serializer = GoogleCalendarEventSerializer(event)
         return Response(response_serializer.data, status=status.HTTP_200_OK)
