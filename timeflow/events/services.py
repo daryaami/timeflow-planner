@@ -185,13 +185,13 @@ def add_event_extended_properties(event: dict, task_id: int | None = None, timel
     Добавляет расширенные свойства событию.
     "timeflow__object-type": 1 - задача, 0 - событие 
     """
-    if task_id and timelog_id:
+    if task_id: #and timelog_id:
         event['extendedProperties'] = {
             'private': {
                 "timeflow__touched": True,
                 "timeflow__object-type": 1,
                 "timeflow__task-id": task_id,
-                "timeflow__connected-timelog-id": timelog_id,
+                # "timeflow__connected-timelog-id": timelog_id,
             }
     }
     else:
