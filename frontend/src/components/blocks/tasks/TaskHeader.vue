@@ -38,7 +38,7 @@ const sortingButtons: Button[] = [
 <!--                    :buttons="sortingButtons" />-->
 
 <!--      <RoundIconButton icon="search"/>-->
-<!--      <TasksViewPopup />-->
+      <TasksViewPopup />
     </div>
 
 

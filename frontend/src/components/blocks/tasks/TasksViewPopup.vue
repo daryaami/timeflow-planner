@@ -3,7 +3,7 @@ import RoundIconButton from "@/components/ui-kit/RoundIconButton.vue";
 import Dropdown from "@/components/ui-kit/Dropdown.vue";
 import {ref} from "vue";
 import {useDropdown} from "@/components/composables/useDropdown";
-import ToggleButtons from "@/components/ui-kit/toggle-buttons.vue";
+import ToggleButtons from "@/components/ui-kit/ToggleButtons.vue";
 
 const rootEl = ref<HTMLElement | null>(null);
 const { isOpen, toggle } = useDropdown(rootEl);
@@ -29,7 +29,6 @@ const { isOpen, toggle } = useDropdown(rootEl);
                          icon: 'column-view'
                        }
                      ]"
-
       />
 
     </Dropdown>
