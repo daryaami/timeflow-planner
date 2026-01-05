@@ -11,6 +11,26 @@ from core.exceptions import CalendarCreationError, CalendarSyncError
 
 logger = logging.getLogger(__name__)
 
+from datetime import datetime
+
+def remove_milliseconds(datetime_str: str) -> str:
+    """
+    Убирает миллисекунды из строки даты-времени в формате RFC 3339.
+    Если миллисекунд нет — возвращает строку без изменений.
+    """
+    if '.' in datetime_str:
+        # Находим точку и убираем всё между точкой и символом Z
+        parts = datetime_str.split('.')
+        # parts[0] — часть до точки
+        # parts[1] — часть после точки, например "000Z"
+        if 'Z' in parts[1]:
+            return parts[0] + 'Z'
+        else:
+            # Если есть смещение +03:00 и т.д.
+            # Убираем миллисекунды и добавляем остаток после миллисекунд
+            return parts[0] + parts[1][3:]  # пропускаем 3 символа миллисекунд
+    return datetime_str
+
 
 class GoogleCalendarService:
     CALENDAR_EVENTS_URL = "https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events"
@@ -140,7 +160,7 @@ class GoogleCalendarService:
                 logger.error("Failed to get events from calendar %s: %s", calendar.google_calendar_id, str(e))
 
         return events_list
-    
+
     def create_event(self, user, google_calendar_id, event_data):
         """
         Создает событие в календаре пользователя.
@@ -152,7 +172,7 @@ class GoogleCalendarService:
             return event
         except HttpError as e:
             raise EventNotFoundError(f"Ошибка при создании события: {str(e)}")
-        
+
     def update_event(self, user, google_calendar_id, event_id, event_data):
         """
         Обновляет существующее событие в календаре пользователя.
@@ -160,11 +180,20 @@ class GoogleCalendarService:
         """
         try:
             service = self._build_google_service(user)
-            event = service.events().update(calendarId=google_calendar_id, eventId=event_id, body=event_data).execute()
-            return event
+            print("PATCH DATA:", event_data)
+            # TODO: Исправить отправку времени
+            # event_data['start']['dateTime'] = remove_milliseconds(event_data['start']['dateTime'])
+            # event_data['end']['dateTime'] = remove_milliseconds(event_data['end']['dateTime'])
+            print("PATCH DATA:", event_data)
+            patched = service.events().patch(
+                calendarId=google_calendar_id, 
+                eventId=event_id, 
+                body=event_data
+            ).execute()
+            return patched
         except HttpError as e:
             raise EventNotFoundError(f"Ошибка при обновлении события: {str(e)}")
-        
+
     def delete_event(self, user, google_calendar_id, event_id):
         """
         Удаляет событие из календаря пользователя.
