@@ -67,11 +67,11 @@ const calendarOptions: CalendarOptions = {
     calendarApi.value?.addEventSource(events);
     isLoading.value = false;
   },
-  eventDragStop: updateEventTimeFromCalendar,
+  eventResize: updateEventTimeFromCalendar,
+  eventDrop: updateEventTimeFromCalendar,
   drop: (dropInfo) => {
     eventsStore.createEvent(dropInfo)
   },
-  eventResizeStop: updateEventTimeFromCalendar
 }
 
 onMounted(async () => {

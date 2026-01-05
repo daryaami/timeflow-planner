@@ -89,6 +89,9 @@ export const useEventsStore = defineStore('events', () => {
     if (response.ok) {
       const event = await response.json()
       events.value.push(adaptEventToFullCalendar(event))
+
+      const updatedTask = await taskStore.loadTaskById(task.id)
+      task.time_logs = updatedTask.time_logs
     }
   }
 
@@ -109,7 +112,6 @@ export const useEventsStore = defineStore('events', () => {
       debounceMap.delete(id) // Удаляем по завершении
 
       const calendarId = getCalendarId(id)
-      console.log(calendarId)
       if (!calendarId) return
 
       await fetch(`${BASE_API_URL}/events/`, {

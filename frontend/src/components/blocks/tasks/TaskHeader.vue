@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import BtnContainer from "@/components/ui-kit/BtnContainer.vue";
 import {Button} from "@/types/button";
 import ProfileDropdown from "@/components/blocks/ProfileDropdown.vue";
-import RoundIconButton from "@/components/ui-kit/RoundIconButton.vue";
+import TasksViewPopup from "@/components/blocks/tasks/TasksViewPopup.vue";
 
 defineProps({
   title: {
@@ -35,11 +34,11 @@ const sortingButtons: Button[] = [
     </div>
 
     <div class="task-header__btns">
-      <BtnContainer size="l"
-                    :buttons="sortingButtons" />
+<!--      <BtnContainer size="l"-->
+<!--                    :buttons="sortingButtons" />-->
 
-      <RoundIconButton icon="search"/>
-      <RoundIconButton icon="dots"/>
+<!--      <RoundIconButton icon="search"/>-->
+      <TasksViewPopup />
     </div>
 
 

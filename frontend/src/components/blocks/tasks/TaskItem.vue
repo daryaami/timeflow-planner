@@ -80,6 +80,24 @@ const categoryName = computed(() => {
 
   cursor: pointer;
 
+  &:has([type="checkbox"]:checked) {
+    & .task-item__title {
+      color: var(--icon-disabled);
+      position: relative;
+
+      &:after {
+        content: '';
+        width: 100%;
+        height: 1px;
+
+        background-color: var(--stroke-secondary);
+        position: absolute;
+        bottom: 40%;
+        left: 0;
+      }
+    }
+  }
+
   @include hover {
     background: var(--bg-secondary);
 
@@ -106,6 +124,11 @@ const categoryName = computed(() => {
   &__title {
     font: var(--light-14);
     display: block;
+    width: fit-content;
+
+    &:after {
+      animation: line-through .3s linear;
+    }
   }
 
   &__due {
@@ -123,6 +146,16 @@ const categoryName = computed(() => {
 
     opacity: 0;
     transition: opacity 0.2s;
+  }
+}
+
+@keyframes line-through {
+  0% {
+    width: 0;
+  }
+
+  100% {
+    width: 100%;
   }
 }
 </style>

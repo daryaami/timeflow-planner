@@ -89,6 +89,19 @@ export const useTasksStore = defineStore('tasks', () => {
     return tasks.value.find(task => task.id === id)
   }
 
+  const loadTaskById = async (id: number) => {
+    const response = await fetch(`${BASE_API_URL}/tasks/${id}/`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Authorization': `JWT ${authStore.getAccessToken()}`
+      }
+    })
+
+    const task = await response.json()
+    return task as Task
+  }
+
   const updateTask = async (task: Task) => {
     await fetch(`${BASE_API_URL}/tasks/${task.id}/`, {
       method: 'PUT',
@@ -112,5 +125,6 @@ export const useTasksStore = defineStore('tasks', () => {
     getTaskById,
     toggleCompleteTask,
     updateTask,
+    loadTaskById
   }
 })
