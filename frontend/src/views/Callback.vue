@@ -20,7 +20,7 @@ onMounted(async () => {
 
   if (code && state) {
     try {
-      const res = await fetch(`${BASE_API_URL}/auth/google/callback`, {
+      const res = await fetch(`${BASE_API_URL}/auth/google/callback/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
