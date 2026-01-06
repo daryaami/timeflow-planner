@@ -45,10 +45,6 @@ const currentMonth = computed(() => {
         text="Week"
         icon="chevron-down"
       />
-      <IconBtn class="planner-header__settings"
-        icon="settings"
-        size="s"
-      />
 
       <ProfileDropdown />
     </div>
@@ -89,11 +85,8 @@ const currentMonth = computed(() => {
     display: flex;
     align-items: center;
     margin-left: auto;
-  }
 
-  &__settings {
-    margin-left: 36px;
-    margin-right: 27px;
+    gap: 32px;
   }
 }
 </style>

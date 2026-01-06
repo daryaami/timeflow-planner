@@ -95,7 +95,10 @@ export const useAuthStore = defineStore('access-token', () => {
       }
     })
 
-    console.log(response)
+    if (!response.ok) return
+
+    accessToken.value = null
+    await router.push('/login/')
   }
 
   return {
