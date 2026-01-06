@@ -68,6 +68,7 @@ class RefreshJWTView(APIView):
     )
     def post(self, request):
         refresh_jwt = request.COOKIES.get('refresh_jwt')
+        print('REFRESH_TOKEN: ', refresh_jwt if refresh_jwt else 'no')
         logger.debug("Received cookies for refresh: %s", request.COOKIES)
         if not refresh_jwt:
             logger.warning("Refresh token not provided in request cookies.")
@@ -106,14 +107,15 @@ class TokenPingView(APIView):
     @swagger_auto_schema(
         operation_description="Проверка работоспособности токена",
         responses={200: openapi.Response(description="Токен работоспособен"),
-                   401: openapi.Response(description="Access JWT токен не найден или истек"),
-                   403: openapi.Response(description="Refresh JWT токен не найден или истек"),
-                   404: openapi.Response(description="Пользователь не найден")}
+                401: openapi.Response(description="Access JWT токен не найден или истек"),
+                403: openapi.Response(description="Refresh JWT токен не найден или истек"),
+                404: openapi.Response(description="Пользователь не найден")}
     )
     def get(self, request):
         refresh_jwt = request.COOKIES.get('refresh_jwt')
+        print('FOUND REFRESH TOKEN')
         if not refresh_jwt:
-            print("No token")
+            print("No REFRESH token")
             raise RefreshJWTError("Refresh token is absent in request cookies.")
         try:
             AuthService.verify_refresh_token(refresh_jwt)

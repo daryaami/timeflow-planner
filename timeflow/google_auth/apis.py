@@ -59,7 +59,7 @@ class GoogleLoginApi(PublicApi):
         state = serializers.CharField(required=False)
 
     @swagger_auto_schema(
-        query_serializer=InputSerializer,
+        request_body=InputSerializer,
         responses={
             200: openapi.Response("Успешный логин", schema=openapi.Schema(
                 type=openapi.TYPE_OBJECT,
@@ -73,8 +73,8 @@ class GoogleLoginApi(PublicApi):
             500: "Ошибка на сервере.",
         }
     )
-    def get(self, request, *args, **kwargs):
-        input_serializer = self.InputSerializer(data=request.GET)
+    def post(self, request, *args, **kwargs):
+        input_serializer = self.InputSerializer(data=request.data)
         input_serializer.is_valid(raise_exception=True)
 
         validated_data = input_serializer.validated_data

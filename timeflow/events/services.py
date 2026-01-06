@@ -15,6 +15,10 @@ logger = logging.getLogger(__name__)
 class GoogleCalendarService:
     CALENDAR_EVENTS_URL = "https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events"
 
+    # TODO: вынести в поле чтобы не дублировать получение
+    # def __init__(self):
+    #     self.credentials = None
+
     def _get_credentials(self, user):
         return get_user_credentials(user.google_id)
 

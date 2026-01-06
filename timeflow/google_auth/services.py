@@ -192,12 +192,13 @@ class GoogleRawLoginFlowService:
 
 def set_refresh_cookie(response, refresh_token, max_age=settings.JWT_REFRESH_TOKEN_LIFETIME):
     response.set_cookie(
-        key="refresh_jwt",
-        value=refresh_token,
+        'refresh_jwt',
+        refresh_token,
         httponly=True,
-        secure=False,          # для локалки без HTTPS
-        samesite='Lax',
+        secure=False,       # HTTP локально — обязательно False
+        samesite='Lax',     # или 'Strict', но не 'None'
         max_age=int(max_age.total_seconds()),
+        path='/'
     )
     return response
 
@@ -232,7 +233,7 @@ def get_user_credentials(user_id: str) -> Credentials:
             info['token'] = token
             print('Access токен находится в кэше.')
         else:
-            print('Access токен в кэше.')
+            print('Access токен не в кэше.')
         g_refresh_token = GoogleRefreshToken.objects.get(user__google_id=user_id)
     
     except GoogleRefreshToken.DoesNotExist:
