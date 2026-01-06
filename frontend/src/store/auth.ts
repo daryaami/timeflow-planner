@@ -84,11 +84,26 @@ export const useAuthStore = defineStore('access-token', () => {
     return true
   }
 
+  const logOut = async () => {
+    const token = getAccessToken()
+
+    const response = await fetch(`${BASE_API_URL}/users/logout/`, {
+      method: "POST",
+      credentials: 'include',
+      headers: {
+        'Authorization': `JWT ${token}`
+      }
+    })
+
+    console.log(response)
+  }
+
   return {
     setAccessToken,
     getAccessToken,
     refreshAccessToken,
     ensureAuthorizedRequest,
-    checkTokens
+    checkTokens,
+    logOut
   }
 })

@@ -66,6 +66,9 @@ const currentMonth = computed(() => {
   width: 100%;
   padding: 15px 35px;
 
+  position: relative;
+  z-index: 10;
+
   &__left-col {
     display: flex;
     align-items: center;

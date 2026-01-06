@@ -6,7 +6,8 @@ const props = withDefaults(defineProps<{
   text: string,
   leftIcon?: string,
   rightIcon?: string,
-  color?: string
+  color?: string,
+  type?: 'error',
 }>(), {
   tag: 'button'
 })
@@ -19,7 +20,7 @@ const computedIconColor = computed(() => {
 </script>
 
 <template>
-  <component :is="tag" class="nav-link">
+  <component :is="tag" :class="`nav-link${type ? ` nav-link--${type}` : ''}`">
     <svg v-if="leftIcon" width="18" height="18"
          :style="computedIconColor"
 
@@ -29,7 +30,10 @@ const computedIconColor = computed(() => {
 
     <span class="nav-link__label">{{ text }}</span>
 
-    <svg v-if="rightIcon" width="18" height="18">
+    <svg class="nav-link__right-icon"
+         v-if="rightIcon"
+         width="18"
+         height="18">
       <use :href="`#${rightIcon}`"></use>
     </svg>
   </component>
@@ -57,9 +61,21 @@ const computedIconColor = computed(() => {
     background: var(--bg-secondary);
   }
 
+  &--error {
+    color: var(--text-error);
+
+    @include hover {
+      background: transparent;
+    }
+  }
+
   &__label {
     display: block;
     white-space: nowrap;
+  }
+
+  &__right-icon {
+    margin-left: auto;
   }
 }
 </style>
