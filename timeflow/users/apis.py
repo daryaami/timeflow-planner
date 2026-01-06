@@ -25,28 +25,24 @@ class LogoutView(APIView):
     @swagger_auto_schema(
         operation_description="Выход пользователя и отзыв refresh токена",
         responses={
-            205: openapi.Response(description="Токен успешно отозван"),
+            204: openapi.Response(description="Токен успешно отозван"),
             500: "Ошибка на сервере"
         }
     )
     def post(self, request):
         refresh_jwt = request.COOKIES.get('refresh_jwt')
-        if not refresh_jwt:
-            logger.warning("Logout attempt without refresh token for user %s", request.user)
-            raise RefreshJWTError("Logout attempt without refresh token.")
-        try:
-            token = RefreshToken(refresh_jwt)
-            token.blacklist()
-            response = Response(status=status.HTTP_205_RESET_CONTENT)
-            response.delete_cookie('refresh_jwt')
-            logger.info("User %s successfully logged out. Refresh token blacklisted.", request.user)
-            return response
-        except Exception as e:
-            logger.exception("Logout failed for user %s: %s", request.user, str(e))
-            return Response(
-                {"error": f"Log out failed: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        if refresh_jwt:
+            try:
+                token = RefreshToken(refresh_jwt)
+                token.blacklist()
+            except Exception as e:
+                logger.exception("Refresh token not valid for user %s: %s", request.user, str(e))
+                pass
+        
+        response = Response(status=status.HTTP_204_NO_CONTENT)
+        response.delete_cookie('refresh_jwt')
+        logger.info("User %s successfully logged out. Refresh token blacklisted.", request.user)
+        return response
 
 class RefreshJWTView(APIView):
     """
