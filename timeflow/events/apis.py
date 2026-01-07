@@ -306,7 +306,6 @@ class EventFromTaskApi(APIView):
 
                 # 3. Создаём timelog
                 timelog = TimeLog.objects.create(
-                    # user=request.user,
                     task=task,
                     start_time=validated["start"],
                     end_time=validated["end"],
