@@ -1,10 +1,9 @@
 import { defineStore } from 'pinia'
-import {getMonthStartDates, formatDate, addMinutes} from '@/components/js/time-utils'
+import {getMonthStartDates, formatDate} from '@/components/js/time-utils'
 import { BASE_API_URL } from '@/config'
 import { useAuthStore } from './auth'
 import { ref } from 'vue'
 import type { EventInput } from '@fullcalendar/core'
-import {DropArg} from "@fullcalendar/interaction";
 import {useTasksStore} from "@/store/tasks";
 
 export const useEventsStore = defineStore('events', () => {
@@ -22,7 +21,7 @@ export const useEventsStore = defineStore('events', () => {
       end: event.end?.dateTime,
       backgroundColor: event.color,
       borderColor: event.color,
-      user_calendar_id: event.user_calendar_id
+      googleEvent: event
     }
   }
 
@@ -64,15 +63,15 @@ export const useEventsStore = defineStore('events', () => {
     return events.value
   }
 
-  const createEvent = async (eventData: DropArg) => {
-    const task = taskStore.getTaskById(Number(eventData.draggedEl.dataset.taskId))
+  const createEvent = async (info: any) => {
+    const task = taskStore.getTaskById(Number(info.draggedEl.dataset.taskId))
 
     if (!task) return
 
     const data = {
       task_id: task.id,
-      start: eventData.date.toISOString(),
-      end: addMinutes(eventData.date, task.duration || 30).toISOString(),
+      start: info.event.start.toISOString(),
+      end: info.event.end.toISOString(),
       user_calendar_id: task.user_calendar_id
     }
 
@@ -92,6 +91,8 @@ export const useEventsStore = defineStore('events', () => {
 
       const updatedTask = await taskStore.loadTaskById(task.id)
       task.time_logs = updatedTask.time_logs
+
+      return event
     }
   }
 
@@ -103,7 +104,16 @@ export const useEventsStore = defineStore('events', () => {
 
   const debounceMap = new Map<string, any>()
 
-  const updateEventTime = (id: string, newStart: string, newEnd: string) => {
+  interface eventUpdateData {
+    id: string,
+    newStart: string,
+    newEnd: string,
+    title?: string
+  }
+
+  const updateEvent = (data: eventUpdateData) => {
+    const { id, newStart, newEnd, title } = data
+
     if (debounceMap.has(id)) {
       clearTimeout(debounceMap.get(id))
     }
@@ -114,6 +124,17 @@ export const useEventsStore = defineStore('events', () => {
       const calendarId = getCalendarId(id)
       if (!calendarId) return
 
+      const payload = {
+        event_id: id,
+        start: {
+          dateTime: newStart,
+        },
+        end: {
+          dateTime: newEnd,
+        },
+        user_calendar_id: calendarId
+      }
+
       await fetch(`${BASE_API_URL}/events/`, {
         method: 'PUT',
         credentials: 'include',
@@ -121,26 +142,33 @@ export const useEventsStore = defineStore('events', () => {
           'Authorization': `JWT ${authStore.getAccessToken()}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          event_id: id,
-          start: {
-            dateTime: newStart,
-          },
-          end: {
-            dateTime: newEnd,
-          },
-          user_calendar_id: calendarId
-        })
+        body: JSON.stringify(payload)
       })
     }, 400)
 
     debounceMap.set(id, timeout)
   }
 
+  const deleteEvent = async (eventId: string, userCalendarId: number) => {
+    await fetch(`${BASE_API_URL}/events/`, {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: {
+        'Authorization': `JWT ${authStore.getAccessToken()}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        event_id: eventId,
+        user_calendar_id: userCalendarId
+      })
+    })
+  }
+
   return {
     events,
     getEvents,
     createEvent,
-    updateEventTime
+    updateEvent,
+    deleteEvent
   }
 })

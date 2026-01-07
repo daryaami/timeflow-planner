@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import FullCalendar from '@fullcalendar/vue3'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin, {EventDragStopArg} from '@fullcalendar/interaction';
-import type { Calendar, CalendarOptions } from '@fullcalendar/core';
+import {Calendar, CalendarOptions, EventClickArg, EventInput} from '@fullcalendar/core';
 
 // components
 import PlannerHeader from "../components/blocks/planner/PlannerHeader.vue";
@@ -13,6 +13,7 @@ import LoaderVue from '../components/blocks/loaders/Loader.vue';
 import {useEventsStore} from "@/store/events";
 import {getEndOfMonth, getStartOfMonth} from "@/components/js/time-utils";
 import AsideTasksList from "@/components/blocks/tasks/AsideTasksList.vue";
+import EventPopup from "@/components/blocks/planner/EventPopup.vue";
 
 const isLoading = ref<boolean>(true);
 
@@ -23,15 +24,26 @@ const eventsStore = useEventsStore()
 
 const currentDate = ref<Date | null>(null)
 
+const selectedEvent = ref<EventInput | null>(null)
+
 const updateEventTimeFromCalendar = (info: EventDragStopArg) => {
   const id = info.event.id
   const start = info.event.start?.toISOString()
   const end = info.event.end?.toISOString()
 
   if (id && start && end) {
-    eventsStore.updateEventTime(id, start, end)
+    eventsStore.updateEvent({
+      id,
+      newStart: start,
+      newEnd: end
+    })
   }
 }
+
+const eventClickHandler = (info: EventClickArg) => {
+  selectedEvent.value = info.event
+}
+
 
 const calendarOptions: CalendarOptions = {
   plugins: [timeGridPlugin, interactionPlugin],
@@ -69,9 +81,12 @@ const calendarOptions: CalendarOptions = {
   },
   eventResize: updateEventTimeFromCalendar,
   eventDrop: updateEventTimeFromCalendar,
-  drop: (dropInfo) => {
-    eventsStore.createEvent(dropInfo)
+  eventReceive: async (info) => {
+    const createdEvent = await eventsStore.createEvent(info)
+    info.event.setExtendedProp('googleEvent', createdEvent)
+    console.log(info)
   },
+  eventClick: eventClickHandler
 }
 
 onMounted(async () => {
@@ -108,6 +123,11 @@ onMounted(async () => {
 
       <div class="planner__calendar-wrapper">
         <FullCalendar :options="calendarOptions" ref="calendarInstance"/>
+        <EventPopup v-if="selectedEvent"
+                    :event="selectedEvent"
+                    @close="selectedEvent = null"
+                    @delete="selectedEvent?.remove(); selectedEvent = null"
+        />
       </div>
   </div>
   <AsideTasksList />
