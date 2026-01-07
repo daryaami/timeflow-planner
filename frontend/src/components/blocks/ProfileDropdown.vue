@@ -34,9 +34,9 @@ onMounted(async () => {
   >
     <img class="profile-dropdown__img"
          :src="profilePic"
-         :alt="name"
          width="40"
          height="40"
+         alt=""
     >
   </button>
 
