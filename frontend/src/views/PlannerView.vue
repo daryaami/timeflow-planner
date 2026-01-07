@@ -31,6 +31,7 @@ const updateEventTimeFromCalendar = (info: EventDragStopArg) => {
   const start = info.event.start?.toISOString()
   const end = info.event.end?.toISOString()
 
+
   if (id && start && end) {
     eventsStore.updateEvent({
       id,
@@ -84,7 +85,6 @@ const calendarOptions: CalendarOptions = {
   eventReceive: async (info) => {
     const createdEvent = await eventsStore.createEvent(info)
     info.event.setExtendedProp('googleEvent', createdEvent)
-    console.log(info)
   },
   eventClick: eventClickHandler
 }

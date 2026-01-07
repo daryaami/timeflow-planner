@@ -98,8 +98,9 @@ export const useEventsStore = defineStore('events', () => {
 
   const getCalendarId = (eventId: string): number | undefined => {
     const event = events.value.find(event => event.id === eventId)
+    const userCalendarId = event?.googleEvent?.user_calendar_id
 
-    return event?.user_calendar_id? event.user_calendar_id : undefined
+    return userCalendarId? userCalendarId : undefined
   }
 
   const debounceMap = new Map<string, any>()
@@ -122,6 +123,9 @@ export const useEventsStore = defineStore('events', () => {
       debounceMap.delete(id) // Удаляем по завершении
 
       const calendarId = getCalendarId(id)
+
+      console.log(calendarId)
+
       if (!calendarId) return
 
       const payload = {
