@@ -202,6 +202,7 @@ def set_refresh_cookie(response, refresh_token, max_age=settings.JWT_REFRESH_TOK
     )
     return response
 
+
 def store_user_token(user_id: str, token: str, expires_in: int | None = 3600):
     """
     Сохраняет access_token для пользователя с указанным user_id.
@@ -233,7 +234,7 @@ def get_user_credentials(user_id: str) -> Credentials:
             info['token'] = token
             print('Access токен находится в кэше.')
         else:
-            print('Access токен не в кэше.')
+            print('Access токена нет в кэше.')
         g_refresh_token = GoogleRefreshToken.objects.get(user__google_id=user_id)
     
     except GoogleRefreshToken.DoesNotExist:

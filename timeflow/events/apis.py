@@ -309,8 +309,7 @@ class EventFromTaskApi(APIView):
                     task=task,
                     start_time=validated["start"],
                     end_time=validated["end"],
-                    google_event_id=calendar_event["id"],
-                    user_calendar=user_calendar
+                    google_event_id=calendar_event["id"]
                 )
                 
         except Exception as e:

@@ -113,9 +113,9 @@ class TokenPingView(APIView):
     )
     def get(self, request):
         refresh_jwt = request.COOKIES.get('refresh_jwt')
-        print('FOUND REFRESH TOKEN')
+        print('ping: FOUND REFRESH TOKEN')
         if not refresh_jwt:
-            print("No REFRESH token")
+            print("ping: No REFRESH token")
             raise RefreshJWTError("Refresh token is absent in request cookies.")
         try:
             AuthService.verify_refresh_token(refresh_jwt)
