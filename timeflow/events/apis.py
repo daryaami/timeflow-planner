@@ -302,6 +302,7 @@ class EventFromTaskApi(APIView):
                     google_calendar_id=user_calendar.google_calendar_id,
                     event_data=extended_event
                 )
+                calendar_event['user_calendar_id'] = user_calendar.id
 
                 # 3. Создаём timelog
                 timelog = TimeLog.objects.create(
@@ -318,39 +319,6 @@ class EventFromTaskApi(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-        # try:
-        #     timelog = TimeLog.objects.create(
-        #         # user=request.user,
-        #         task=task,
-        #         start_time=validated["start"],
-        #         end_time=validated["end"],
-        #         google_event_id=calendar_event["id"]
-        #     )
-        # except Exception as e:
-        #     return Response({"error": f"Не удалось создать timelog: {str(e)}"},
-        #                     status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        # event_data = {
-        #     "summary": task.title,
-        #     "description": task.notes,
-        #     "start": {"dateTime": validated["start"].isoformat()},
-        #     "end": {"dateTime": validated["end"].isoformat()},
-        # }
-        # extended_event = add_event_extended_properties(event_data, task.id, timelog.id)
-
-        # gcal_service = GoogleCalendarService()
-
-        # try:
-        #     calendar_event = gcal_service.create_event(
-        #         user=request.user,
-        #         google_calendar_id=user_calendar.google_calendar_id,
-        #         event_data=extended_event
-        #     )
-        # except Exception as e:
-        #     return Response({"error": f"Не удалось создать событие в Google Calendar: {str(e)}"},
-        #                     status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        # extended_event = add_event_extended_properties(calendar_event, task.id, timelog.id)
         response_serializer = GoogleCalendarEventSerializer(calendar_event)
 
         print(response_serializer.data)
