@@ -2,6 +2,7 @@
 import { useRoute } from 'vue-router';
 import LoginLayout from './layouts/LoginLayout.vue';
 import DefaultLayout from './layouts/DefaultLayout.vue';
+import TextLayout from './layouts/TextLayout.vue';
 
 const route = useRoute();
 </script>
@@ -10,6 +11,7 @@ const route = useRoute();
   <div class="container">
     <LoginLayout v-if="route.meta.layout === 'login'" />
     <DefaultLayout v-if="route.meta.layout === 'default'"/>
+    <TextLayout v-if="route.meta.layout === 'text'"/>
   </div>
 </template>
 

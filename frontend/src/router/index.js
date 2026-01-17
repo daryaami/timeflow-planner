@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import PrivacyPolicy from "@/views/PrivacyPolicy.vue";
 
 const Callback = import("../views/Callback.vue");
 const LoginView = import("../views/LoginView.vue");
@@ -46,6 +47,14 @@ const router = createRouter({
       meta: {
         layout: 'default',
         metaTitle: 'Tasks'
+      },
+    },
+    {
+      path: '/privacy-policy',
+      component: PrivacyPolicy,
+      meta: {
+        layout: 'text',
+        metaTitle: 'Privacy Policy'
       },
     }
   ],
