@@ -27,12 +27,10 @@ if DJANGO_ENV == "production":
 else:
     load_dotenv(BASE_DIR / ".env.development") 
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-jot6xd()f$&oaz%29d_58sw$f6o+yg+wu%2g@pq&jz1&qi5*00'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-jot6xd()f$&oaz%29d_58sw$f6o+yg+wu%2g@pq&jz1&qi5*00')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 if DJANGO_ENV == "production":
