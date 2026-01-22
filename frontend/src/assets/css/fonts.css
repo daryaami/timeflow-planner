@@ -30,4 +30,6 @@
   --bold-14: 400 14px / 1 var(--main-font);
   --bold-12: 400 12px / 14px var(--main-font);
   --bold-10: 400 10px / 14px var(--main-font);
+
+  --title-30: 300 30px / 1 var(--main-font);
 }
