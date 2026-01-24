@@ -10,6 +10,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.exceptions import TokenError
 
 from core.exceptions import AccessJWTError, GoogleRefreshTokenError, RefreshJWTError, UserNotFoundError
 from users.models import CustomUser
@@ -118,7 +119,7 @@ class TokenPingView(APIView):
             raise RefreshJWTError("Refresh token is absent in request cookies.")
         try:
             AuthService.verify_refresh_token(refresh_jwt)
-        except AuthenticationFailed:
+        except (AuthenticationFailed, TokenError):
             raise RefreshJWTError("Refresh token is invalid or expired.")
         
         access_token = request.headers.get("Authorization")

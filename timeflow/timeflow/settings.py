@@ -38,7 +38,10 @@ if DJANGO_ENV == "production":
 else:
     DEBUG = True
 
-ALLOWED_HOSTS = []
+if DJANGO_ENV == "production":
+    ALLOWED_HOSTS = ['*']  # В Docker можно использовать *, так как nginx фильтрует запросы
+else:
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Application definition
 

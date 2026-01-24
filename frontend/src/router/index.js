@@ -1,25 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import PrivacyPolicy from "@/views/PrivacyPolicy.vue";
-
-const Callback = import("../views/Callback.vue");
-const LoginView = import("../views/LoginView.vue");
-const PlannerView = import("../views/PlannerView.vue");
-const AuthCheck = import("../views/AuthCheck.vue");
-const TasksView = import("../views/TasksView.vue");
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      component: AuthCheck,
+      component: () => import("../views/AuthCheck.vue"),
       meta: {
         layout: 'login',
       }
     },
     {
       path: '/auth/google/callback',
-      component: Callback,
+      component: () => import("../views/Callback.vue"),
       meta: {
         layout: 'login',
         metaTitle: 'Log in to TimeFlow'
@@ -27,7 +20,7 @@ const router = createRouter({
     },
     {
       path: '/login',
-      component: LoginView,
+      component: () => import("../views/LoginView.vue"),
       meta: {
         layout: 'login',
         metaTitle: 'Log in to TimeFlow'
@@ -35,7 +28,7 @@ const router = createRouter({
     },
     {
       path: '/planner',
-      component: PlannerView,
+      component: () => import("../views/PlannerView.vue"),
       meta: {
         layout: 'default',
         metaTitle: 'Planner'
@@ -43,7 +36,7 @@ const router = createRouter({
     },
     {
       path: '/tasks',
-      component: TasksView,
+      component: () => import("../views/TasksView.vue"),
       meta: {
         layout: 'default',
         metaTitle: 'Tasks'
@@ -51,7 +44,7 @@ const router = createRouter({
     },
     {
       path: '/privacy-policy',
-      component: PrivacyPolicy,
+      component: () => import("@/views/PrivacyPolicy.vue"),
       meta: {
         layout: 'text',
         metaTitle: 'Privacy Policy'

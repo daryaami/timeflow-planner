@@ -19,6 +19,9 @@ services:
     build:
       context: ./frontend
     container_name: timeflowapi-frontend
+    volumes:
+      - frontend_dist:/app/dist_volume
+    command: sh -c "cp -r /app/dist/. /app/dist_volume/ && echo 'Frontend files copied to volume' && sleep infinity"
     networks:
       - appnet
     # НЕ пробрасываем порты наружу — nginx будет единственной точкой входа
@@ -29,13 +32,17 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./frontend/dist:/usr/share/nginx/html:ro
+      - frontend_dist:/usr/share/nginx/html:ro
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - backend
       - frontend
+      - backend
     networks:
       - appnet
+
+volumes:
+  frontend_dist:
+    driver: local
 
 networks:
   appnet:

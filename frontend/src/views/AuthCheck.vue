@@ -7,12 +7,14 @@ const authStore = useAuthStore()
 const router = useRouter()
 
 const checkTokens = async () => {
+  console.log('checkTokens')
   const isTokensValid = await authStore.checkTokens()
 
   if (isTokensValid) await router.push('/planner')
 }
 
 onMounted(() => {
+  console.log('mouted')
   checkTokens()
 })
 </script>

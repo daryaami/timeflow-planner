@@ -20,6 +20,7 @@ from django.contrib import admin
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from core.views import HealthCheckView
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -37,6 +38,8 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # Healthcheck endpoint для мониторинга
+    path('api/health/', HealthCheckView.as_view(), name='health'),
     path('api/auth/google/', include('google_auth.urls')),
     path('api/auth/jwt/', include('users.urls')),
     path('api/events/', include('events.urls')),

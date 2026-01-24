@@ -1,17 +1,26 @@
 <script setup>
+import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import LoginLayout from './layouts/LoginLayout.vue';
 import DefaultLayout from './layouts/DefaultLayout.vue';
 import TextLayout from './layouts/TextLayout.vue';
 
 const route = useRoute();
+
+const layoutComponent = computed(() => {
+  const layout = route.meta.layout || 'default';
+  const layouts = {
+    login: LoginLayout,
+    default: DefaultLayout,
+    text: TextLayout,
+  };
+  return layouts[layout] || DefaultLayout;
+});
 </script>
 
 <template>
   <div class="container">
-    <LoginLayout v-if="route.meta.layout === 'login'" />
-    <DefaultLayout v-if="route.meta.layout === 'default'"/>
-    <TextLayout v-if="route.meta.layout === 'text'"/>
+    <component :is="layoutComponent" />
   </div>
 </template>
 

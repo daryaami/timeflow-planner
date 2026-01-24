@@ -66,6 +66,8 @@ export const useAuthStore = defineStore('access-token', () => {
   const checkTokens = async () => {
     const token = getAccessToken()
 
+    console.log('token', token)
+
     if (token) {
       const fetchFn = () => fetch(`${BASE_API_URL}/users/ping/`, {
         method: 'GET',
