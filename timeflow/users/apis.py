@@ -88,7 +88,7 @@ class RefreshJWTView(APIView):
             raise RefreshJWTError(detail=str(e))
 
 class ProfileView(APIView):
-    '''Получает информацию о профиле юзера'''
+    '''Получает информацию о профиле юзера, обновляет имя и удаляет аккаунт'''
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
@@ -99,6 +99,81 @@ class ProfileView(APIView):
         logger.info("User %s requested their profile.", request.user)
         user = UserSerializer(request.user)
         return Response(user.data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        operation_description="Обновление имени пользователя",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'name': openapi.Schema(type=openapi.TYPE_STRING, description='Новое имя пользователя')
+            },
+            required=['name']
+        ),
+        responses={
+            200: openapi.Response(description="Имя успешно обновлено", schema=UserSerializer),
+            400: openapi.Response(description="Неверные данные"),
+            500: openapi.Response(description="Ошибка на сервере")
+        }
+    )
+    def patch(self, request):
+        """Обновляет имя пользователя"""
+        name = request.data.get('name')
+        if not name:
+            return Response(
+                {"error": "Поле 'name' обязательно для заполнения"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if not isinstance(name, str) or len(name.strip()) == 0:
+            return Response(
+                {"error": "Имя не может быть пустым"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        request.user.name = name.strip()
+        request.user.save()
+        logger.info("User %s updated their name to: %s", request.user.email, name)
+        
+        user_serializer = UserSerializer(request.user)
+        return Response(user_serializer.data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        operation_description="Удаление аккаунта пользователя и всей связанной информации",
+        responses={
+            204: openapi.Response(description="Аккаунт успешно удален"),
+            500: openapi.Response(description="Ошибка на сервере")
+        }
+    )
+    def delete(self, request):
+        """Удаляет аккаунт пользователя и всю связанную информацию"""
+        user_email = request.user.email
+        user_id = request.user.id
+        
+        try:
+            # Удаляем refresh токен из cookies, если он есть
+            refresh_jwt = request.COOKIES.get('refresh_jwt')
+            if refresh_jwt:
+                try:
+                    token = RefreshToken(refresh_jwt)
+                    token.blacklist()
+                except Exception as e:
+                    logger.warning("Could not blacklist refresh token for user %s: %s", user_email, str(e))
+            
+            # Удаляем пользователя (все связанные данные удалятся автоматически благодаря CASCADE)
+            request.user.delete()
+            
+            logger.info("User %s (ID: %s) account and all related data deleted successfully", user_email, user_id)
+            
+            response = Response(status=status.HTTP_204_NO_CONTENT)
+            response.delete_cookie('refresh_jwt')
+            return response
+            
+        except Exception as e:
+            logger.exception("Error deleting user account %s: %s", user_email, str(e))
+            return Response(
+                {"error": "Произошла ошибка при удалении аккаунта"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class TokenPingView(APIView):
     '''Проверяет работоспособность access_jwt и refresh_jwt токенов'''
