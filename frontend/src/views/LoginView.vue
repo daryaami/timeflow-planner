@@ -25,14 +25,14 @@ const loginWithGoogle = async () => {
       <TimeflowLogo
         class="login-page__logo"
       />
-      <h1 class="login-page__title">Log in to TimeFlow</h1>
+      <h1 class="login-page__title">Log in to Chronika</h1>
 
       <GoogleBtn class="login-page__button"
         @click="loginWithGoogle"
         text="Continue with Google"
       />
 
-      <p class="login-page__privacy-text">By using TimeFlow, you agree to our Terms of Service and Privacy Policy.</p>
+    <p class="login-page__privacy-text">By using Chronika, you agree to our Terms of Service and <a href="/privacy-policy/">Privacy Policy</a>.</p>
     </section>
 </template>
 
